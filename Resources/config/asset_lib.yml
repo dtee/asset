@@ -1,0 +1,25 @@
+css_bundle:
+  root_path: /home/dtee/symfony/src
+  less_import_paths: 
+    - "@OdlAssetBundle/Resources/public/css/lib/less"
+  resources:
+    -
+      local: "@OdlAssetBundle/Resources/public/css/lib/blue_print/screen.css"
+    -
+      local: "@OdlAssetBundle/Resources/public/css/lib/jquery_ui/smoothness/jquery-ui-1.8.11.custom.css"
+    -
+      local: "@OdlAssetBundle/Resources/public/css/lib/jquery.jqGrid/ui.jqgrid.css"
+ 
+js_bundle:
+  root_path: /home/dtee/symfony/src
+  resources:
+    -
+      local: "@OdlAssetBundle/Resources/public/js/lib/jquery/jquery-1.5.2.js"
+    -
+      local: "@OdlAssetBundle/Resources/public/js/lib/jquery_ui/jquery-1.4.4.min.js"
+    -
+      local: "@OdlAssetBundle/Resources/public/js/lib/jquery_ui/jquery-ui-1.8.11.custom.min.js"
+    -
+      local: "@OdlAssetBundle/Resources/public/js/lib/jquery.ajaxform.js"
+    -
+      local: "@OdlAssetBundle/Resources/public/js/lib/jquery.jqGrid/jquery.jqGrid.src.js"

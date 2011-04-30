@@ -1,0 +1,89 @@
+@import 'elements.less';
+
+@background: #EFEFEF;
+@border: 1px solid #DFDFDF;
+@font-family: "Lucida Sans Unicode", "Lucida Grande", Verdana, Arial, Helvetica, sans-serif;
+	
+html, body {
+    font-size: 14px;	
+    background: @background;
+	color: #313131;
+	font-family: @font-family;
+}
+
+body {
+	@bw-gradient(@background; 180; 255);
+}
+
+a {
+    color: #08C;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.main {
+	padding: 1px solid red;
+	.content {
+		border: 1px solid green;
+	}
+}
+
+.user_profile {
+	width: 160px;
+	overflow: hidden;
+	font-size: 12px;
+
+	.user_info {
+		display: table-cell;
+		vertical-align: top;
+		width: 10000px;
+		text-align: right;
+		padding-right: 10px;
+	}
+	
+	.profile_image {
+		float: right;
+	}
+}
+
+.container {
+	.header {
+		position: relative;
+		padding: 30px 30px 20px 30px;
+
+		.user_profile {
+			margin-top: 5px;
+			float: right;
+		}
+	}
+	
+	.content {
+		padding: 40px;
+		border: @border;
+		background-color: #fff;
+		@rounded(16px);
+    	margin-bottom: 20px;
+		@drop-shadow(5px; 8px);
+	}
+}
+
+form {
+	.wrapper {
+		.wrapper {
+			clear: both;
+			margin-left: 20px;
+		}
+	}
+	
+	.error {
+		border: none;
+		display: none;
+	}
+	
+	.bad .error {
+		display: block;
+	}
+}
