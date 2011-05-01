@@ -1,6 +1,8 @@
 <?php
 namespace Odl\AssetBundle\Asset;
 
+use Odl\AssetBundle\Filter\LessphpOptionsFilter;
+
 use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
 
 use Assetic\Filter\Yui\CssCompressorFilter;
@@ -116,7 +118,9 @@ class YAMLAssetManager
     {
 		$lessImportPaths = isset($package['less_import_paths']) ? $package['less_import_paths'] : array();
 		$lessImportPaths = $this->getAbsolutePaths($lessImportPaths, false);
-		$lessFilter = new LessphpFilter(null, $lessImportPaths);
+		
+		$options = array('importDir' => $lessImportPaths);
+		$lessFilter = new LessphpOptionsFilter(null, $options);
 
 		$files = $this->getAbsolutePaths($package['resources'], true);
     	$assetCollection = new AssetCollection();
@@ -147,6 +151,7 @@ class YAMLAssetManager
 			}
 			else
 			{
+				$filename .= $asset->getLastModified();
 				$pathKey = md5($filename);
 			}
 
@@ -159,14 +164,14 @@ class YAMLAssetManager
 			$assetCollection->is_css = true;
 		}
 
-		$assetCollection->setTargetUrl('/asset/' . $package['name']);
-		$this->set($package['name'], $assetCollection);
+		$assetCollection->setTargetUrl('/asset/' . $pathKey);
+		$this->set($pathKey, $assetCollection);
     }
 
     /**
      * Takes whole config and load individual packages
      *
-     * @param unknown_type $config
+     * @param array $config
      * @throws FileNotFoundException
      */
 	protected function loadFromConfig(array $config)

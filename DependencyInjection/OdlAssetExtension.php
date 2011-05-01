@@ -11,8 +11,6 @@ class OdlAssetExtension
 {
     public function load(array $configs, ContainerBuilder $container)
     {
-    	v('in asset extension');
-
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
 
