@@ -7,15 +7,14 @@ use Assetic\Filter\Yui\CssCompressorFilter;
 use Assetic\Filter\LessphpFilter;
 use Assetic\Asset\FileAsset;
 use Assetic\Asset\AssetCollection;
-use Assetic\AssetManager;
 use Assetic\Asset\AssetInterface;
 
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Yaml\Yaml;
 
 class YAMLAssetManager
-	extends AssetManager
 {
+    protected $assets = array();
 	protected $kernel;
 	protected $debug = true;
 
@@ -40,6 +39,11 @@ class YAMLAssetManager
 			throw new FileNotFoundException($filename);
 		}
 	}
+	
+    public function has($name)
+    {
+        return isset($this->assets[$name]);
+    }
 
     public function get($name)
     {
@@ -50,13 +54,18 @@ class YAMLAssetManager
     {
         $this->assets[$name] = $asset;
     }
+    
+    public function getNames()
+    {
+        return array_keys($this->assets);
+    }
 
     /**
      * Takes a resource setting and convert them into absolute paths
      *
      * @param array $paths
      */
-    protected function getAbsolutePaths(array $paths)
+    protected function getAbsolutePaths(array $paths, $isIncludeBundlePath)
     {
     	$retVal = array();
     	foreach ($paths as $path)
@@ -77,8 +86,22 @@ class YAMLAssetManager
 				throw new FileNotFoundException($filename);
 				continue;
 			}
-
-			$retVal[] = $filename;
+			
+			$name = substr($path, 1);
+			list($bundleName, $path) = explode('/', $name, 2);
+			$bundle = $this->kernel->getBundle($bundleName, true);
+			$bundlePath = $bundle->getPath();
+			
+			if ($isIncludeBundlePath)
+			{
+				$retVal[] = array(
+					'root' => str_replace($bundleName, '', $bundlePath),
+					'full_path' => $filename
+				);
+			}
+			else {
+				$retVal[] = $filename;
+			}
     	}
 
     	return $retVal;
@@ -92,14 +115,15 @@ class YAMLAssetManager
     protected function loadPackage(array $package)
     {
 		$lessImportPaths = isset($package['less_import_paths']) ? $package['less_import_paths'] : array();
-		$lessImportPaths = $this->getAbsolutePaths($lessImportPaths);
+		$lessImportPaths = $this->getAbsolutePaths($lessImportPaths, false);
 		$lessFilter = new LessphpFilter(null, $lessImportPaths);
 
-		$files = $this->getAbsolutePaths($package['resources']);
+		$files = $this->getAbsolutePaths($package['resources'], true);
     	$assetCollection = new AssetCollection();
 		$isCss = false;
-		foreach ($files as $filename)
+		foreach ($files as $fileInfo)
 		{
+			$filename = $fileInfo['full_path'];
 			$asset = new FileAsset($filename);
 			$isCss = endsWith($filename, '.css');
 			// Create a new asset
@@ -117,7 +141,7 @@ class YAMLAssetManager
 			$assetCollection->add($asset);
 			if ($this->debug)
 			{
-				$rootPath = $package['root_path'];
+				$rootPath = $fileInfo['root'];
 				$pathKey = str_replace($rootPath, '', $filename);
 				$pathKey = trim($pathKey, '/');
 			}
