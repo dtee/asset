@@ -1,5 +1,5 @@
 (function($) {
-	this.settings = {
+	var settings = {
 		selector_error: 'div.error',
 		class_bad: 'bad',
 		class_good: 'good',
@@ -16,8 +16,14 @@
 	};
 	
 	// Regular inline hidden error element
-	this.settings.error_formatter = function(container, errors) {
+	settings.error_formatter = function(container, errors) {
+		console.log(settings.selector_error);
 		var errorElement = container.find(settings.selector_error);
+		if (errorElement.length == 0)
+			return;
+		
+		console.log(errorElement);
+		console.log(errors);
 		if (errors != null)
 		{
 			container
@@ -50,6 +56,8 @@
 			
 			var errors = errorList[index];
 			var container = form.find('#' + index + '-container');
+			console.log(container);
+			console.log(errors);
 			settings.error_formatter(container, errors);
 		}
 		
@@ -95,8 +103,6 @@
 	 */
 	methods.submit = function (options)
 	{
-		console.log('in submit:');
-		console.log(settings);
 		var hasSession = this.data('session.ajaxForm');
 		var data = {};
 		if ( options ) { 
