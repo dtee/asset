@@ -8,6 +8,7 @@
 		<parameter key="asset.asset_twig_extension.class">Odl\AssetBundle\Twig\Extension\AssetExtension</parameter>
 		<parameter key="asset.asset_manager.class">Odl\AssetBundle\Asset\YAMLAssetManager</parameter>
 		<parameter key="asset.asset_manager.packages">%kernel.root_dir%/config/assets.yml</parameter>
+		<parameter key="asset.form_errors">Odl\AssetBundle\Form\AjaxErrorProvider</parameter>
 	</parameters>
 	
     <services>
@@ -17,9 +18,13 @@
             <argument type="service" id="service_container" />
         </service>
         
-        <service id="asset.asset_manager" class="%asset.asset_manager.class%">
+        <service id="asset.asset_manager" class="%asset.asset_manager.class%" public="true">
 			<argument type="service" id="kernel" />
             <argument>%assetic.yaml_asset_manager.packages%</argument>
+        </service>
+        
+        <service id="form.errors" class="%asset.form_errors%" public="true">
+        	<argument type="service" id="translator" />
         </service>
     </services>
 </container>
