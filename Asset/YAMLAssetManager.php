@@ -164,6 +164,7 @@ class YAMLAssetManager
 			$assetCollection->is_css = true;
 		}
 
+		$pathKey = $package['name'];
 		$assetCollection->setTargetUrl('/asset/' . $pathKey);
 		$this->set($pathKey, $assetCollection);
     }
