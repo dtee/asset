@@ -13,10 +13,8 @@ class AjaxErrorProvider
 		$this->translator = $translator;
 	}
 
-	public function getErrors(Form $form)
+	public function getErrors(Form $form, &$errors = array())
 	{
-        $errors = array();
-
         $formView = $form->createView();
         $key = $formView->get('id');
 
@@ -40,7 +38,7 @@ class AjaxErrorProvider
 
 		foreach ($form->getChildren() as $childName => $form)
 		{
-			$errors = array_merge($errors, $this->getErrors($form));
+			$this->getErrors($form, $errors);
 		}
 
 		return $errors;

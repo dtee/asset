@@ -44,7 +44,6 @@ class AssetController
 	            $response->setLastModified($date);
 	        }
 
-
 	        // Run though yui when debug is not enabled!
 	        if ($response->isNotModified($request)) {
 	            return $response;

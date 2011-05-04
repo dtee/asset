@@ -51,6 +51,9 @@
 		var returnedJson = $.parseJSON(data);
 		var errorList = returnedJson.error;
 		
+		// Reset all errors
+		form.find('.error').html('');
+		
 		for (var index in errorList)
 		{
 			if (index == '*')
@@ -60,14 +63,17 @@
 			
 			var errors = errorList[index];
 			var container = form.find('#' + index + '-container');
-			console.log(container);
-			console.log(errors);
 			settings.error_formatter(container, errors);
 		}
 		
 		if (settings.custom_success)
 		{
 			settings.custom_success(returnedJson);
+		}
+		
+		if (returnedJson.href)
+		{
+			window.location.href = returnedJson.href;
 		}
 	};
 	
