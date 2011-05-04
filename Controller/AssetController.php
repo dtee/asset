@@ -81,6 +81,9 @@ class AssetController
 		$resourcePath = '@OdlAssetBundle/external/yuicompressor-2.4.6.jar';
 		$jarPath = $kernel->locateResource($resourcePath);
 
+		if (!file_exists($javaPath))
+			return null;
+			
 		if (isset($asset->is_css))
 		{
 			$yuiFilter = new \Assetic\Filter\Yui\CssCompressorFilter($jarPath, $javaPath);

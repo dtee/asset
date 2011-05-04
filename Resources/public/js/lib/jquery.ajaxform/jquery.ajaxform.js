@@ -1,6 +1,5 @@
 (function($) {
 	var settings = {
-		selector_error: 'div.error',
 		class_bad: 'bad',
 		class_good: 'good',
 		url : null,
@@ -17,19 +16,22 @@
 	
 	// Regular inline hidden error element
 	settings.error_formatter = function(container, errors) {
-		console.log(settings.selector_error);
-		var errorElement = container.find(settings.selector_error);
+		var errorElement = container.find('> .error');
 		if (errorElement.length == 0)
-			return;
+		{
+			errorElement = $('<div class="error" />');
+			container.append(errorElement);
+		}
 		
-		console.log(errorElement);
-		console.log(errors);
 		if (errors != null)
 		{
 			container
 				.addClass(settings.class_bad)
 				.removeClass(settings.class_good);
-			errorElement.html(errors[0]);
+			
+			errorElement
+				.css('display', 'block')
+				.html(errors.join('<br/>'));
 		}
 		else
 		{
@@ -37,7 +39,9 @@
 				.addClass(settings.class_good)
 				.removeClass(settings.class_bad);
 			
-			errorElement.html('');
+			errorElement
+				.css('display', 'none')
+				.html('');
 		}
 	};
 	
