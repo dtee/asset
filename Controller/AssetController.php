@@ -36,37 +36,41 @@ class AssetController
 			{
 				$response->headers->set('Content-Type', 'application/javascript');
 			}
+			
+			$kernel = $this->get('kernel');
+			$isDebug = $kernel->isDebug();
 
 	        // last-modified
-	        if (null !== $lastModified = $asset->getLastModified()) {
-	            $date = new \DateTime();
-	            $date->setTimestamp($lastModified);
-	            $response->setLastModified($date);
+	        if (!$isDebug) {
+		        if (null !== $lastModified = $asset->getLastModified()) {
+		            $date = new \DateTime();
+		            $date->setTimestamp($lastModified);
+		            $response->setLastModified($date);
+		        }
+	
+		        // Run though yui when debug is not enabled!
+		        if ($response->isNotModified($request)) {
+		            return $response;
+		        }
+	
+		        $cache = null;
+		        $isCompress = !$isDebug || $request->get('nocompress');
+				$isCompress = true;
+	
+		        if ($isCompress && $filter = $this->getYuiFilter($asset))
+		        {
+		        	$asset->ensureFilter($filter);
+	
+		        	// We should cache the result
+		        	$cacheDir = $kernel->getCacheDir() . '/asset';
+		        	$cache = new FilesystemCache($cacheDir);
+		        }
+	
+	    		if ($cache)
+	    		{
+	    			$asset = $this->cachifyAsset($asset, $cache);
+	    		}
 	        }
-
-	        // Run though yui when debug is not enabled!
-	        if ($response->isNotModified($request)) {
-	            return $response;
-	        }
-
-	        $cache = null;
-			$kernel = $this->get('kernel');
-	        $isCompress = !$kernel->isDebug() || $request->get('nocompress');
-			$isCompress = true;
-
-	        if ($isCompress && $filter = $this->getYuiFilter($asset))
-	        {
-	        	$asset->ensureFilter($filter);
-
-	        	// We should cache the result
-	        	$cacheDir = $kernel->getCacheDir() . '/asset';
-	        	$cache = new FilesystemCache($cacheDir);
-	        }
-
-    		if ($cache)
-    		{
-    			$asset = $this->cachifyAsset($asset, $cache);
-    		}
 
 	        $response->setContent($asset->dump());
 			return $response;

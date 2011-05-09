@@ -40,7 +40,7 @@ class AjaxErrorProvider
 		{
 			$this->getErrors($form, $errors);
 		}
-
+		
 		return $errors;
 	}
 }
