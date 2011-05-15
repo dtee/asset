@@ -60,7 +60,7 @@ log = function(value) {
 		var errorList = returnedJson.error;
 		
 		// Reset all errors
-		$this.find('.error').html('');
+		$this.find('.error').html('').css('display', 'none');
 		
 		for (var index in errorList)
 		{
@@ -109,6 +109,7 @@ log = function(value) {
 
 	var methods = {};
 	var $this = null;
+	var $buttons = null;
 	
 	/**
 	 * Init the $this
@@ -129,7 +130,7 @@ log = function(value) {
 			}
 			
 			if (!options.buttons) {
-				options.buttons = $this.find('input[type="button"], input[type="submit"]');
+				options.buttons = $this.find(':button, :submit');
 			}
 			
 			if (!options.url) {
@@ -144,7 +145,17 @@ log = function(value) {
 				return false;
 			});
 			
+			if (!options.url) {
+				options.url = $(this).attr('action');
+				
+				if (!options.url)
+				{options
+					options.url = window.location.href;
+				}
+			}
+			
 	        $.extend(settings, options);
+	        $buttons = settings.buttons;
 		});
 	};
 	
@@ -177,10 +188,6 @@ log = function(value) {
 		settings.success = success;
 		settings.error = error;
 		
-		if (!settings.url) {
-			settings.url = this.attr('action');
-		}
-		
 		$.ajax(settings);
 	};
 	
@@ -202,8 +209,6 @@ log = function(value) {
 	};
 
 	$.fn.ajaxForm = function(method) {
-		log ('in ajaxForm..');
-		
 		// Method calling logic
 		if (methods[method]) {
 			return methods[method].apply(this, Array.prototype.slice.call(
@@ -224,8 +229,7 @@ log = function(value) {
 			return;
 		}
 		
-		// Disable all submitable buttons, and input elements
-		settings.buttons.attr('disabled', true);
+		disableButtons();
 		
 		hasSession = true;
 		sessionTimeoutHandle = setTimeout(function() {
@@ -238,13 +242,26 @@ log = function(value) {
 		hasSession = false;
 		
 		// enable all submitable buttons and input elements
-		settings.buttons.attr('disabled', false);
+		enableFields();
 
 		// kill the session timer call back
 		if (sessionTimeoutHandle) {
 			sessionTimeoutHandle = null;
 			clearTimeout(sessionTimeoutHandle);
 		}
+	};
+	
+	var disableFields = function() {
+		$this.find('input').attr('readonly', true)
+	};
+	
+	var disableButtons = function() {
+		$buttons.attr('disabled', true);
+	}
+	
+	var enableFields = function() {
+		$buttons.attr('disabled', false);
+		$this.find('input').attr('readonly', false);
 	};
 })(jQuery);
 
