@@ -159,7 +159,7 @@ class YAMLAssetManager
 			}
 
 			$url = $this->router->generate('_odl_asset', array('name' => $pathKey));
-			$asset->setTargetUrl($url);
+			$asset->setTargetPath($url);
 			$this->set($pathKey, $asset);
 		}
 
@@ -170,7 +170,7 @@ class YAMLAssetManager
 
 		$pathKey = $package['name'];
 		$url = $this->router->generate('_odl_asset', array('name' => $pathKey));
-		$assetCollection->setTargetUrl($url);
+		$assetCollection->setTargetPath($url);
 
 		$this->set($pathKey, $assetCollection);
     }

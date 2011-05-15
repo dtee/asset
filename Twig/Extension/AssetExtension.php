@@ -55,7 +55,7 @@ class AssetExtension
     	}
 		else
 		{
-			$url = $asset->getTargetUrl();
+			$url = $asset->getTargetPath();
 			if (isset($asset->is_css))
 			{
 				$retVal = "<link rel=\"stylesheet\" href=\"{$url}\" type=\"text/css\" media=\"all\" />\n";

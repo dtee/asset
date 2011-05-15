@@ -42,13 +42,13 @@ class LessphpOptionsFilter implements FilterInterface
 
     public function filterLoad(AssetInterface $asset)
     {
-        $sourceUrl = $asset->getSourceUrl();
+        $sourceUrl = $asset->getSourcePath();
         if ($sourceUrl && false === strpos($sourceUrl, '://')) {
             $baseDir = self::isAbsolutePath($sourceUrl) ? '' : $this->baseDir.'/';
             $sourceUrl = $baseDir.$sourceUrl;
         }
 
-        $lc = new \lessc($sourceUrl);
+        $lc = new \lessc();
         if (isset($this->options['importDir']))
         {
        		$lc->importDir = $this->options['importDir'];
