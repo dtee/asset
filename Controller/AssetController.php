@@ -1,6 +1,10 @@
 <?php
 namespace Odl\AssetBundle\Controller;
 
+use Odl\AssetBundle\Image\ImageSprite;
+
+use Odl\AssetBundle\Image\Pack\Rectangle;
+use Odl\AssetBundle\Image\Pack\Canvas;
 use Assetic\Asset\AssetCache;
 use Assetic\Asset\AssetInterface;
 use Assetic\Cache\FilesystemCache;
@@ -10,6 +14,23 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 class AssetController
 	extends Controller
 {
+	/**
+	 * @extra:Route("/test")
+	 * @Template
+	 */
+	public function test() {
+		$path = '/service/img/sprites/circle';
+		$sprite = new ImageSprite($path);
+
+		$image = $sprite->getSprite(1024, 780);
+
+		$response = new Response();
+		$response->headers->set('Content-type', 'image/png');
+        $response->setContent($image);
+		return $response;
+	}
+
+
 	/**
 	 * @extra:Route("/{name}",
 	 *  requirements={"name" = ".*"}, defaults={"name" = "css_bundle"},
@@ -36,7 +57,7 @@ class AssetController
 			{
 				$response->headers->set('Content-Type', 'application/javascript');
 			}
-			
+
 			$kernel = $this->get('kernel');
 			$isDebug = $kernel->isDebug();
 
@@ -47,25 +68,25 @@ class AssetController
 		            $date->setTimestamp($lastModified);
 		            $response->setLastModified($date);
 		        }
-	
+
 		        // Run though yui when debug is not enabled!
 		        if ($response->isNotModified($request)) {
 		            return $response;
 		        }
-	
+
 		        $cache = null;
 		        $isCompress = !$isDebug || $request->get('nocompress');
 				$isCompress = true;
-	
+
 		        if ($isCompress && $filter = $this->getYuiFilter($asset))
 		        {
 		        	$asset->ensureFilter($filter);
-	
+
 		        	// We should cache the result
 		        	$cacheDir = $kernel->getCacheDir() . '/asset';
 		        	$cache = new FilesystemCache($cacheDir);
 		        }
-	
+
 	    		if ($cache)
 	    		{
 	    			$asset = $this->cachifyAsset($asset, $cache);
@@ -86,7 +107,7 @@ class AssetController
 
 		if (!file_exists($javaPath))
 			return null;
-			
+
 		if (isset($asset->is_css))
 		{
 			$yuiFilter = new \Assetic\Filter\Yui\CssCompressorFilter($jarPath, $javaPath);
