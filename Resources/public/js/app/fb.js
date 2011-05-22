@@ -7,7 +7,10 @@ window.fbAsyncInit = function() {
 		xfbml : true,
 		logging : true
 	});
-	
+
+	FB.api('/me/friends', function(response) {
+		  log(response);
+	});
 	// Do other facebook related tasks here
 };
 

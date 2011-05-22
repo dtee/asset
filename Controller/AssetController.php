@@ -30,7 +30,6 @@ class AssetController
 		return $response;
 	}
 
-
 	/**
 	 * @extra:Route("/{name}",
 	 *  requirements={"name" = ".*"}, defaults={"name" = "css_bundle"},

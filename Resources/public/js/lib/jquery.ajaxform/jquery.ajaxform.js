@@ -182,7 +182,12 @@ log = function(value) {
 	        data = options.data;
 		}
 		
-		settings.data = methods.serialize.apply(data);
+		if (settings.onsubmit) {
+			data = settings.onsubmit();
+		}
+		
+		settings.data = methods.serialize(data);
+		log(settings.data)
 		settings.dataType = 'text';
 		settings.type = 'POST';
 		settings.success = success;
@@ -202,10 +207,11 @@ log = function(value) {
 		var serializedData = $this.serializeArray();
 		for (var key in data)
 		{
-			serializedData.push({name: key, value : data[key]});
+			value = $.toJSON(data[key]);
+			serializedData.push({name: key, value : value});
 		}
 		
-		return $.param(serializedData);
+		return $.param(serializedData, false);
 	};
 
 	$.fn.ajaxForm = function(method) {
