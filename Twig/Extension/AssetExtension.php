@@ -28,19 +28,31 @@ class AssetExtension
         );
     }
 
-    public function getJumbo($name)
+    public function getJumbo($names)
     {
+    	if (!is_array($names))
+    	{
+    		$names = array($names);
+    	}
+    	
     	$managerName = 'asset.asset_manager';
     	$assetManager = $this->container->get($managerName);
-    	if ($assetManager->has($name))
+    	
+    	$retVal = '';
+    	foreach ($names as $name)
     	{
-    		$asset = $assetManager->get($name);
-    		return $this->getAssetHTML($asset);
+	    	if ($assetManager->has($name))
+	    	{
+	    		$asset = $assetManager->get($name);
+	    		$retVal .= $this->getAssetHTML($asset);
+	    	}
+	    	else
+	    	{
+	    		throw new \Exception("Asset '{$name}' not found in {$managerName}");
+	    	}
     	}
-    	else
-    	{
-    		throw new \Exception("Asset '{$name}' not found in {$managerName}");
-    	}
+    	
+    	return $retVal;
     }
 
     protected function getAssetHTML(AssetInterface $asset)
