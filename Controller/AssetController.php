@@ -1,13 +1,15 @@
 <?php
 namespace Odl\AssetBundle\Controller;
 
-use Odl\AssetBundle\Image\ImageSprite;
 
+use Odl\AssetBundle\Image\ImageSprite;
 use Odl\AssetBundle\Image\Pack\Rectangle;
 use Odl\AssetBundle\Image\Pack\Canvas;
+
 use Assetic\Asset\AssetCache;
 use Assetic\Asset\AssetInterface;
 use Assetic\Cache\FilesystemCache;
+
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
@@ -15,14 +17,22 @@ class AssetController
 	extends Controller
 {
 	/**
+	 * @extra:Route("/info")
+	 * @Template
+	 */
+	public function info() {
+		return new Response(phpInfo());
+	}
+
+	/**
 	 * @extra:Route("/test")
 	 * @Template
 	 */
 	public function test() {
-		$path = '/service/img/sprites/circle';
+		$path = '/service/img/sprites/tetris';
 		$sprite = new ImageSprite($path);
 
-		$image = $sprite->getSprite(1024, 780);
+		$image = $sprite->getSprite();
 
 		$response = new Response();
 		$response->headers->set('Content-type', 'image/png');
