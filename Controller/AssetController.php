@@ -29,8 +29,8 @@ class AssetController
 	 * @Template
 	 */
 	public function test() {
-		$path = '/service/img/sprites/tetris';
-		$sprite = new ImageSprite($path);
+		$manager = $this->container->get('asset.asset_manager');
+		$sprite = $manager->getSprite('places');
 
 		$image = $sprite->getSprite();
 
@@ -41,12 +41,17 @@ class AssetController
 	}
 
 	/**
-	 * @extra:Route("/{name}",
-	 *  requirements={"name" = ".*"}, defaults={"name" = "css_bundle"},
-	 *  name="_odl_asset")
+	 * @extra:Route("/sprite/{name}")
 	 */
 	public function sprite($name) {
+		$manager = $this->container->get('asset.asset_manager');
+		$sprite = $manager->getSprite($name);
+		$image = $sprite->getSprite();
 
+		$response = new Response();
+		$response->headers->set('Content-type', 'image/png');
+        $response->setContent($image);
+		return $response;
 	}
 
 	/**

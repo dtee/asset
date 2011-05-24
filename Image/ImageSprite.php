@@ -7,7 +7,6 @@ use Imagick;
 use Odl\AssetBundle\Image\Pack\Canvas;
 
 class ImageSprite {
-	protected $path;
 	protected $finder;
 	protected $images = array();
 	protected $gutter;
@@ -17,12 +16,21 @@ class ImageSprite {
 	protected $height;
 
 	public function __construct($path, $gutter = 10) {
-		$this->path = $path;
 		$this->gutter = $gutter;
 
 		// Set up finder based on path
 		$finder = new Finder();
-		$finder->files()->name('*.png')->in($path);
+		$finder->files()->name('*.png');
+		if (is_array($path))
+		{
+			foreach ($path as $p) {
+				$finder->in($p);
+			}
+		}
+		else
+		{
+			$finder->in($path);
+		}
 
 		$this->finder = $finder;
 	}

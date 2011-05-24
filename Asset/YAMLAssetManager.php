@@ -2,6 +2,7 @@
 namespace Odl\AssetBundle\Asset;
 
 use Odl\AssetBundle\Filter\LessphpOptionsFilter;
+use Odl\AssetBundle\Image\ImageSprite;
 
 use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
 use Symfony\Component\Routing\Router;
@@ -20,6 +21,7 @@ class YAMLAssetManager
 	protected $kernel;
 	protected $debug = true;
 	protected $router;
+	protected $spriteConfig = array();
 
 	public function __construct(
 		Kernel $kernel,
@@ -31,10 +33,9 @@ class YAMLAssetManager
 		$this->router = $router;
 
 		$yamlConfig = $this->getConfig($assetYamlPath);
-		$spriteConfig = $this->getConfig($spriteYamlPath);
+		$this->spriteConfig = $this->getConfig($spriteYamlPath);
 
-		ve($spriteConfig);
-		$this->loadFromConfig($config);
+		$this->loadFromConfig($yamlConfig);
 	}
 
 	protected function getConfig($filename) {
@@ -52,6 +53,19 @@ class YAMLAssetManager
 		{
 			throw new FileNotFoundException($filename);
 		}
+	}
+
+	public function getSprite($name) {
+		if (!isset($this->spriteConfig[$name]))
+		{
+			throw new \Exception("{$name} is not found in sprite config");
+		}
+
+		$spriteConfig = $this->spriteConfig[$name];
+		$paths = $this->getAbsolutePaths($spriteConfig['resources'], false);
+
+		$sprite = new ImageSprite($paths);
+		return $sprite;
 	}
 
     public function has($name)
