@@ -22,7 +22,7 @@ class AssetController
 		$path = '/service/img/sprites/circle';
 		$sprite = new ImageSprite($path);
 
-		$image = $sprite->getSprite(1024, 780);
+		$image = $sprite->getSprite();
 
 		$response = new Response();
 		$response->headers->set('Content-type', 'image/png');

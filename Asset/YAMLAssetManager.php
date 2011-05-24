@@ -24,11 +24,20 @@ class YAMLAssetManager
 	public function __construct(
 		Kernel $kernel,
 		Router $router,
-		$filename)
+		$assetYamlPath,
+		$spriteYamlPath)
 	{
 		$this->kernel = $kernel;
 		$this->router = $router;
 
+		$yamlConfig = $this->getConfig($assetYamlPath);
+		$spriteConfig = $this->getConfig($spriteYamlPath);
+
+		ve($spriteConfig);
+		$this->loadFromConfig($config);
+	}
+
+	protected function getConfig($filename) {
 		if (startsWith($filename, '@'))
 		{
 			$filename = $kernel->locateResource($yamlFilePath);
@@ -37,7 +46,7 @@ class YAMLAssetManager
 		if ($filename && file_exists($filename))
 		{
 			$config = YAML::load($filename);
-			$this->loadFromConfig($config);
+			return $config;
 		}
 		else
 		{
