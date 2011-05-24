@@ -45,6 +45,15 @@ class AssetController
 	 *  requirements={"name" = ".*"}, defaults={"name" = "css_bundle"},
 	 *  name="_odl_asset")
 	 */
+	public function sprite($name) {
+
+	}
+
+	/**
+	 * @extra:Route("/{name}",
+	 *  requirements={"name" = ".*"}, defaults={"name" = "css_bundle"},
+	 *  name="_odl_asset")
+	 */
 	public function assetAction($name)
 	{
 		$manger = $this->container->get('asset.asset_manager');
