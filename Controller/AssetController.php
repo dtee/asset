@@ -101,6 +101,10 @@ class AssetController
 		            $date = new \DateTime();
 		            $date->setTimestamp($lastModified);
 		            $response->setLastModified($date);
+
+		            $year = $date->format("Y") + 5;
+		            $date = new \DateTime($year);
+		            $response->setExpires($date);
 		        }
 
 		        // Run though yui when debug is not enabled!
@@ -109,7 +113,6 @@ class AssetController
 		        }
 
 		        $cache = null;
-		        $isCompress = !$isDebug || $request->get('nocompress');
 				$isCompress = true;
 
 		        if ($isCompress && $filter = $this->getYuiFilter($asset))
@@ -142,7 +145,7 @@ class AssetController
 		if (!file_exists($javaPath))
 			return null;
 
-		if (isset($asset->is_css))
+		if (isset($asset->type) && $asset->type == 'css')
 		{
 			$yuiFilter = new \Assetic\Filter\Yui\CssCompressorFilter($jarPath, $javaPath);
 		}

@@ -220,7 +220,10 @@ class YAMLAssetManager
 				$pathKey = md5($filename);
 			}
 
-			$url = $this->router->generate('_odl_asset', array('name' => $pathKey));
+			$url = $this->router->generate('_odl_asset', array(
+				'name' => $pathKey,
+				'v' => $asset->getLastModified()
+			));
 			$asset->setTargetPath($url);
 			$this->set($pathKey, $asset);
 		}
@@ -228,9 +231,12 @@ class YAMLAssetManager
 		$assetCollection->type = $package['type'];
 
 		$pathKey = $package['name'];
-		$url = $this->router->generate('_odl_asset', array('name' => $pathKey));
-		$assetCollection->setTargetPath($url);
+		$url = $this->router->generate('_odl_asset', array(
+			'name' => $pathKey,
+			'v' => $assetCollection->getLastModified()
+		));
 
+		$assetCollection->setTargetPath($url);
 		$this->set($pathKey, $assetCollection);
     }
 
