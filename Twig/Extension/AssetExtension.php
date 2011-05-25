@@ -34,10 +34,10 @@ class AssetExtension
     	{
     		$names = array($names);
     	}
-    	
+
     	$managerName = 'asset.asset_manager';
     	$assetManager = $this->container->get($managerName);
-    	
+
     	$retVal = '';
     	foreach ($names as $name)
     	{
@@ -51,7 +51,7 @@ class AssetExtension
 	    		throw new \Exception("Asset '{$name}' not found in {$managerName}");
 	    	}
     	}
-    	
+
     	return $retVal;
     }
 
@@ -68,7 +68,7 @@ class AssetExtension
 		else
 		{
 			$url = $asset->getTargetPath();
-			if (isset($asset->is_css))
+			if (isset($asset->type) && $asset->type == 'css')
 			{
 				$retVal = "<link rel=\"stylesheet\" href=\"{$url}\" type=\"text/css\" media=\"all\" />\n";
 			}

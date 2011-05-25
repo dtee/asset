@@ -26,8 +26,7 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-                ->scalarNode('asset_resource')->isRequired()->cannotBeEmpty()->end()
-                ->scalarNode('sprite_resource')->isRequired()->cannotBeEmpty()->end();
+                ->scalarNode('asset_resource')->isRequired()->cannotBeEmpty()->end();
 
         return $treeBuilder;
     }

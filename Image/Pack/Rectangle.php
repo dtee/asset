@@ -25,4 +25,13 @@ class Rectangle {
 	public function __toString() {
 		return printf("({$this->x}, {$this->y}) - ({$this->width}, {$this->height})");
 	}
+
+	public function toArray() {
+		return array(
+			'height' => $this->height,
+			'width' => $this->width,
+			'offset_x' => $this->x,
+			'offset_y' => $this->y
+		);
+	}
 }

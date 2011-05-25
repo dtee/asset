@@ -1,17 +1,18 @@
 <?php
 namespace Odl\AssetBundle\Image;
 
+use Assetic\Asset\BaseAsset;
 use Odl\AssetBundle\Image\Pack\ImageRectangle;
 use Symfony\Component\Finder\Finder;
 use Imagick;
 use Odl\AssetBundle\Image\Pack\Canvas;
 
-class ImageSprite {
+class ImageSprite
+{
 	protected $finder;
 	protected $images = array();
 	protected $gutter;
 	protected $sprite;
-
 	protected $width;
 	protected $height;
 
@@ -35,6 +36,10 @@ class ImageSprite {
 		$this->finder = $finder;
 	}
 
+	public function getFiles() {
+		return $this->finder;
+	}
+
 	public function getImages() {
 		$totalWidth = 0;
 		$totalHeight = 0;
@@ -45,12 +50,20 @@ class ImageSprite {
 				$image = new Imagick();
 				$image->readImage($realPath);
 
-				$rectangle = new ImageRectangle($image, $this->gutter);
+				$rectangle = new ImageRectangle($image, $realPath, $this->gutter);
 				$totalWidth += $rectangle->width;
 				$totalHeight += $rectangle->height;
 				$maxWidth = max($maxWidth, $rectangle->width);
 
-				$this->images[$realPath] = $rectangle;
+				$key = $rectangle->getKey();
+				if (isset($this->images[$key])) {
+					$path1 = $this->images[$key]->getPath();
+					$path2 = $rectangle->getPath();
+
+					throw new \Exception("Duplate key found: {$path1} {$path2}");
+				}
+
+				$this->images[$key] = $rectangle;
 			}
 		}
 
@@ -70,15 +83,10 @@ class ImageSprite {
 		return $this->height;
 	}
 
-	public function getSprite($width = null, $height = null) {
+	public function getSprite() {
 		$images = $this->getImages();
-		if (!$width) {
-			$width = $this->getWidth();
-		}
-
-		if (!$height) {
-			$height = $this->getHeight();
-		}
+		$width = $this->getWidth();
+		$height = $this->getHeight();
 
 		$canvas = new Canvas($width, $height);
 		$sprite = new Imagick();
@@ -104,16 +112,5 @@ class ImageSprite {
 		$sprite->cropImage($width, $maxY, 0, 0);
 		$sprite->setImageFormat('png');
 		return $sprite;
-	}
-
-	/**
-	 * Generate Less CSS based on the sprite location
-	 */
-	public function getLessCSS() {
-		if (!$this->less) {
-			throw new \Exception('call getSprite() first');
-		}
-
-		return $this->less;
 	}
 }

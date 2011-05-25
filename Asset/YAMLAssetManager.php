@@ -1,6 +1,10 @@
 <?php
 namespace Odl\AssetBundle\Asset;
 
+use Assetic\Asset\StringAsset;
+
+use Assetic\Filter\CssRewriteFilter;
+
 use Odl\AssetBundle\Filter\LessphpOptionsFilter;
 use Odl\AssetBundle\Image\ImageSprite;
 
@@ -21,20 +25,16 @@ class YAMLAssetManager
 	protected $kernel;
 	protected $debug = true;
 	protected $router;
-	protected $spriteConfig = array();
 
 	public function __construct(
 		Kernel $kernel,
 		Router $router,
-		$assetYamlPath,
-		$spriteYamlPath)
+		$assetYamlPath)
 	{
 		$this->kernel = $kernel;
 		$this->router = $router;
 
 		$yamlConfig = $this->getConfig($assetYamlPath);
-		$this->spriteConfig = $this->getConfig($spriteYamlPath);
-
 		$this->loadFromConfig($yamlConfig);
 	}
 
@@ -55,19 +55,6 @@ class YAMLAssetManager
 		}
 	}
 
-	public function getSprite($name) {
-		if (!isset($this->spriteConfig[$name]))
-		{
-			throw new \Exception("{$name} is not found in sprite config");
-		}
-
-		$spriteConfig = $this->spriteConfig[$name];
-		$paths = $this->getAbsolutePaths($spriteConfig['resources'], false);
-
-		$sprite = new ImageSprite($paths);
-		return $sprite;
-	}
-
     public function has($name)
     {
         return isset($this->assets[$name]);
@@ -86,6 +73,50 @@ class YAMLAssetManager
     public function getNames()
     {
         return array_keys($this->assets);
+    }
+
+    /**
+     * Sprite splits into two assets:
+     * 	Image asset and css asset
+     */
+    protected function loadSprite($package) {
+    	$name = $package['name'];
+    	if (isset($this->sprites[$name])) {
+			throw new Exception("Duplicate sprite resources {$name}");
+    	}
+
+    	$path = $package['resources'];
+    	$gutter = isset($package['gutter']) ? $package['gutter'] : null;
+    	$path = $this->getAbsolutePaths($path, false);
+    	$imageSprite = new ImageSprite($path, $gutter);
+
+    	$this->sprites[$name] = $name;
+
+    	$cssAssetKey = $this->getSpriteCssName($name);
+		$imageAssetKey = $this->getSpriteImageName($name);
+
+    	// Css: Do we send it through filters?
+		$url = $this->router->generate('_odl_asset', array('name' => $imageAssetKey));
+		$asset = new SpriteCssAsset($imageSprite, $url);
+		$asset->type = 'css';
+		$this->set($cssAssetKey, $asset);
+
+		// Image:
+		$asset = new SpriteImageAsset($imageSprite, $url);
+		$asset->type = 'image';
+		$this->set($imageAssetKey, $asset);
+    }
+
+    public function getSprites() {
+    	return $this->sprites;
+    }
+
+    public function getSpriteImageName($name) {
+		return "sprite/image/{$name}";
+    }
+
+    public function getSpriteCssName($name) {
+    	return "sprite/css/{$name}";
     }
 
     /**
@@ -147,6 +178,7 @@ class YAMLAssetManager
 
 		$options = array('importDir' => $lessImportPaths);
 		$lessFilter = new LessphpOptionsFilter(null, $options);
+		$cssRewriteFilter = new CssRewriteFilter();
 
 		$files = $this->getAbsolutePaths($package['resources'], true);
     	$assetCollection = new AssetCollection();
@@ -155,28 +187,19 @@ class YAMLAssetManager
 		{
 			$filename = $fileInfo['full_path'];
 			$asset = new FileAsset($filename);
-			$isCss = endsWith($filename, '.css');
-			// Create a new asset
-			if (endsWith($filename, '.less'))
-			{
-				$isCss = true;
+			$asset->type = $package['type'];
+
+			if (endsWith($filename, '.less')) {
 				$asset->ensureFilter($lessFilter);
 			}
 
-			if ($isCss)
-			{
-				$asset->is_css = true;
-			}
-
 			$assetCollection->add($asset);
-			if ($this->debug)
-			{
+			if ($this->debug) {
 				$rootPath = $fileInfo['root'];
 				$pathKey = str_replace($rootPath, '', $filename);
 				$pathKey = trim($pathKey, '/');
 			}
-			else
-			{
+			else {
 				$filename .= $asset->getLastModified();
 				$pathKey = md5($filename);
 			}
@@ -186,10 +209,7 @@ class YAMLAssetManager
 			$this->set($pathKey, $asset);
 		}
 
-		if ($isCss)
-		{
-			$assetCollection->is_css = true;
-		}
+		$assetCollection->type = $package['type'];
 
 		$pathKey = $package['name'];
 		$url = $this->router->generate('_odl_asset', array('name' => $pathKey));
@@ -209,7 +229,14 @@ class YAMLAssetManager
 		foreach ($config as $key => $package)
 		{
 			$package['name'] = $key;
-			$this->loadPackage($package);
+			if ($package['type'] == 'sprite')
+			{
+				$this->loadSprite($package);
+			}
+			else
+			{
+				$this->loadPackage($package);
+			}
 		}
 	}
 }

@@ -2,6 +2,8 @@
 namespace Odl\AssetBundle\Controller;
 
 
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
 use Odl\AssetBundle\Image\ImageSprite;
 use Odl\AssetBundle\Image\Pack\Rectangle;
 use Odl\AssetBundle\Image\Pack\Canvas;
@@ -26,32 +28,36 @@ class AssetController
 
 	/**
 	 * @extra:Route("/test")
-	 * @Template
+	 * @Template()
 	 */
-	public function test() {
+	public function testAction() {
+		$name = 'places';
 		$manager = $this->container->get('asset.asset_manager');
-		$sprite = $manager->getSprite('places');
 
-		$image = $sprite->getSprite();
+		$imageName = $manager->getSpriteImageName($name);
+		$cssName = $manager->getSpriteCssName($name);
 
-		$response = new Response();
-		$response->headers->set('Content-type', 'image/png');
-        $response->setContent($image);
-		return $response;
-	}
+		$spriteAsset = $manager->get($cssName);
+		$sprite = $spriteAsset->getSprite();
 
-	/**
-	 * @extra:Route("/sprite/{name}")
-	 */
-	public function sprite($name) {
-		$manager = $this->container->get('asset.asset_manager');
-		$sprite = $manager->getSprite($name);
-		$image = $sprite->getSprite();
+		$sprite->getSprite();
+		$images = $sprite->getImages();
 
-		$response = new Response();
-		$response->headers->set('Content-type', 'image/png');
-        $response->setContent($image);
-		return $response;
+		$router = $this->get('router');
+		$imageUrl = $router->generate('_odl_asset', array('name' => $imageName));
+
+		$hash = array();
+		foreach ($images as $image) {
+			$key = $image->getKey();
+			$hash[$key] = $image->toArray();
+		}
+
+		return array(
+			'imageUrl' => $imageUrl,
+			'cssUrl' => $router->generate('_odl_asset', array('name' => $cssName)),
+			'hash' => $hash,
+			'sprite' => $sprite
+		);
 	}
 
 	/**
@@ -62,23 +68,28 @@ class AssetController
 	public function assetAction($name)
 	{
 		$manger = $this->container->get('asset.asset_manager');
-		$asset = $manger->get($name);
 
-        if (!$asset) {
+        if (!$manger->has($name)) {
             throw new NotFoundHttpException(sprintf('The "%s" asset could not be found.', $name));
         }
+        else {
+        	// See if file exists in resource directory??
+        }
+
+		$asset = $manger->get($name);
+        $typeHash = array(
+        	'css' => 'text/css',
+        	'image' => 'image/png',
+        	'javascript' => 'application/javascript'
+        );
 
 		if ($asset)
 		{
 			$request = $this->get('request');
 			$response = new Response();
-			if (isset($asset->is_css))
+			if (isset($typeHash[$asset->type]))
 			{
-				$response->headers->set('Content-Type', 'text/css');
-			}
-			else
-			{
-				$response->headers->set('Content-Type', 'application/javascript');
+				$response->headers->set('Content-Type', $typeHash[$asset->type]);
 			}
 
 			$kernel = $this->get('kernel');

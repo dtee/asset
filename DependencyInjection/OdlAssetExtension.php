@@ -21,10 +21,7 @@ class OdlAssetExtension
         $loader->load('asset_services.xml');
 
         $assetYamlPath = $config['asset_resource'];
-        $spriteYamlPath = $config['sprite_resource'];
-
         $container->setParameter('asset.asset_manager.assets', $assetYamlPath);
-        $container->setParameter('asset.asset_manager.sprites', $spriteYamlPath);
 
         // Lets set up
     }
