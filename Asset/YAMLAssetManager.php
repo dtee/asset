@@ -127,11 +127,13 @@ class YAMLAssetManager
     protected function getAbsolutePaths(array $paths, $isIncludeBundlePath)
     {
     	$retVal = array();
-    	foreach ($paths as $path)
+    	foreach ($paths as $pathInfo)
     	{
-    		if (is_array($path) && isset($path['local']))
-    		{
-    			$path = $path['local'];
+    		if (is_array($pathInfo) && isset($pathInfo['local'])) {
+    			$path = $pathInfo['local'];
+    		}
+    		else {
+    			$path = $pathInfo;
     		}
 
     		if (!$path)
@@ -153,14 +155,21 @@ class YAMLAssetManager
 
 			if ($isIncludeBundlePath)
 			{
-				$retVal[] = array(
+				$fileInfo = array(
 					'root' => str_replace($bundleName, '', $bundlePath),
 					'full_path' => $filename
 				);
+
+				if (is_array($pathInfo))
+				{
+					$fileInfo = array_merge($fileInfo, $pathInfo);
+				}
 			}
 			else {
-				$retVal[] = $filename;
+				$fileInfo = $filename;
 			}
+
+			$retVal[] = $fileInfo;
     	}
 
     	return $retVal;
@@ -186,11 +195,18 @@ class YAMLAssetManager
 		foreach ($files as $fileInfo)
 		{
 			$filename = $fileInfo['full_path'];
-			$asset = new FileAsset($filename);
+			$sourceRoot = (isset($fileInfo['source_root'])) ? $fileInfo['source_root'] : null;
+			$sourcePath = (isset($fileInfo['source_path'])) ? $fileInfo['source_path'] : null;
+
+			$asset = new FileAsset($filename, array(), $sourceRoot, $sourcePath);
 			$asset->type = $package['type'];
 
 			if (endsWith($filename, '.less')) {
 				$asset->ensureFilter($lessFilter);
+			}
+
+			if ($asset->type == 'css') {
+				$asset->ensureFilter($cssRewriteFilter);
 			}
 
 			$assetCollection->add($asset);
