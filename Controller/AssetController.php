@@ -1,17 +1,16 @@
 <?php
 namespace Odl\AssetBundle\Controller;
 
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-
 use Odl\AssetBundle\Image\ImageSprite;
 use Odl\AssetBundle\Image\Pack\Rectangle;
 use Odl\AssetBundle\Image\Pack\Canvas;
-
 use Assetic\Asset\AssetCache;
 use Assetic\Asset\AssetInterface;
 use Assetic\Cache\FilesystemCache;
-
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
@@ -19,15 +18,15 @@ class AssetController
 	extends Controller
 {
 	/**
-	 * @extra:Route("/info")
-	 * @Template
+	 * @Route("/info")
+	 * @Template()
 	 */
 	public function info() {
 		return new Response(phpInfo());
 	}
 
 	/**
-	 * @extra:Route("/test")
+	 * @Route("/test")
 	 * @Template()
 	 */
 	public function testAction() {
@@ -61,7 +60,7 @@ class AssetController
 	}
 
 	/**
-	 * @extra:Route("/{name}",
+	 * @Route("/{name}",
 	 *  requirements={"name" = ".*"}, defaults={"name" = "css_bundle"},
 	 *  name="_odl_asset")
 	 */
