@@ -101,8 +101,9 @@ class AssetController
 		            $date->setTimestamp($lastModified);
 		            $response->setLastModified($date);
 
-		            $year = $date->format("Y") + 5;
-		            $date = new \DateTime($year);
+		            $date = new \DateTime();
+		            $year = $date->format("Y") + 3;
+		            $date->setDate($year, 1, 1);
 		            $response->setExpires($date);
 		        }
 
