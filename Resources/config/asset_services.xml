@@ -16,6 +16,7 @@
         <service id="twig.extension.acme.asset" class="%asset.asset_twig_extension.class%" public="false">
             <tag name="twig.extension" />
             <argument type="service" id="service_container" />
+            <argument type="service" id="templating.helper.assets" />
         </service>
         
         <service id="asset.asset_manager" class="%asset.asset_manager.class%" public="true">

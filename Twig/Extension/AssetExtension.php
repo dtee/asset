@@ -1,6 +1,8 @@
 <?php
 namespace Odl\AssetBundle\Twig\Extension;
 
+use Symfony\Bundle\FrameworkBundle\Templating\Helper\AssetsHelper;
+
 use Symfony\Component\DependencyInjection\Container;
 use Assetic\Asset\AssetInterface;
 use Assetic\Asset\AssetCollection;
@@ -10,9 +12,13 @@ class AssetExtension
 {
 	private $container;
 	private $debug;
+	private $assetsHelper;
 
-    public function __construct(Container $container)
+    public function __construct(
+        Container $container,
+        AssetsHelper $assetsHelper)
     {
+        $this->assetsHelper = $assetsHelper;
         $this->container = $container;
         $this->debug = $container->get('kernel')->isDebug();
     }
@@ -67,7 +73,8 @@ class AssetExtension
     	}
 		else
 		{
-			$url = $asset->getTargetPath();
+			$path = $asset->getTargetPath();
+			$url = $this->assetsHelper->getUrl($path);
 			if (isset($asset->type) && $asset->type == 'css')
 			{
 				$retVal = "<link rel=\"stylesheet\" href=\"{$url}\" type=\"text/css\" media=\"all\" />\n";
