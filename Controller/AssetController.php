@@ -94,24 +94,24 @@ class AssetController
 			$kernel = $this->get('kernel');
 			$isDebug = $kernel->isDebug();
 
+	        if (null !== $lastModified = $asset->getLastModified()) {
+	            $date = new \DateTime();
+	            $date->setTimestamp($lastModified);
+	            $response->setLastModified($date);
+
+	            $date = new \DateTime();
+	            $year = $date->format("Y") + 3;
+	            $date->setDate($year, 1, 1);
+	            $response->setExpires($date);
+	        }
+
+	        // Run though yui when debug is not enabled!
+	        if ($response->isNotModified($request)) {
+	            return $response;
+	        }
+
 	        // last-modified
 	        if (!$isDebug) {
-		        if (null !== $lastModified = $asset->getLastModified()) {
-		            $date = new \DateTime();
-		            $date->setTimestamp($lastModified);
-		            $response->setLastModified($date);
-
-		            $date = new \DateTime();
-		            $year = $date->format("Y") + 3;
-		            $date->setDate($year, 1, 1);
-		            $response->setExpires($date);
-		        }
-
-		        // Run though yui when debug is not enabled!
-		        if ($response->isNotModified($request)) {
-		            return $response;
-		        }
-
 		        $cache = null;
 				$isCompress = true;
 
