@@ -40,7 +40,7 @@ class ImageSprite
 		return $this->finder;
 	}
 
-	public function getImages() {
+	public function getImages($throwsException = false) {
 		$totalWidth = 0;
 		$totalHeight = 0;
 		$maxWidth = 0;
@@ -60,7 +60,14 @@ class ImageSprite
 					$path1 = $this->images[$key]->getPath();
 					$path2 = $rectangle->getPath();
 
-					throw new \Exception("Duplate key found: {$path1} {$path2}");
+					if ($throwsException)
+					{
+						throw new \Exception("Duplate key found: {$path1} {$path2}");
+					}
+					else
+					{
+						continue;
+					}
 				}
 
 				$this->images[$key] = $rectangle;

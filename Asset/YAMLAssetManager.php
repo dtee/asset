@@ -141,20 +141,28 @@ class YAMLAssetManager
     			throw new \Exception("path must not be null");
     		}
 
-			$filename = $this->kernel->locateResource($path);
+    		if (startsWith($path, '@'))
+    		{
+				$filename = $this->kernel->locateResource($path);
+    		}
+    		else
+    		{
+    			$filename = $path;
+    		}
+
 			if (!$filename || !file_exists($filename))
 			{
 				throw new FileNotFoundException($filename);
 				continue;
 			}
 
-			$name = substr($path, 1);
-			list($bundleName, $path) = explode('/', $name, 2);
-			$bundle = $this->kernel->getBundle($bundleName, true);
-			$bundlePath = $bundle->getPath();
-
 			if ($isIncludeBundlePath)
 			{
+				$name = substr($path, 1);
+				list($bundleName, $path) = explode('/', $name, 2);
+				$bundle = $this->kernel->getBundle($bundleName, true);
+				$bundlePath = $bundle->getPath();
+
 				$fileInfo = array(
 					'root' => str_replace($bundleName, '', $bundlePath),
 					'full_path' => $filename
