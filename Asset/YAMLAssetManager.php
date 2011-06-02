@@ -152,7 +152,9 @@ class YAMLAssetManager
 
 			if (!$filename || !file_exists($filename))
 			{
-				throw new FileNotFoundException($filename);
+			    if ($this->kernel->isDebug())
+				    throw new FileNotFoundException($filename);
+
 				continue;
 			}
 
