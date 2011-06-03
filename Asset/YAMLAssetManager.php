@@ -95,16 +95,26 @@ class YAMLAssetManager
     	$cssAssetKey = $this->getSpriteCssName($name);
 		$imageAssetKey = $this->getSpriteImageName($name);
 
-    	// Css: Do we send it through filters?
-		$url = $this->router->generate('_odl_asset', array('name' => $imageAssetKey));
-		$asset = new SpriteCssAsset($imageSprite, $url);
-		$asset->type = 'css';
-		$this->set($cssAssetKey, $asset);
+		// Create Image Asset
+		$spriteAsset = new SpriteImageAsset($imageSprite);
+		$spriteImageUrl = $this->router->generate('_odl_asset', array(
+			'name' => $imageAssetKey,
+			'time' => $spriteAsset->getLastModified()
+		));
+		$spriteAsset->setTargetPath($spriteImageUrl);
+		$spriteAsset->type = 'image';
+		$this->set($imageAssetKey, $spriteAsset);
 
-		// Image:
-		$asset = new SpriteImageAsset($imageSprite, $url);
-		$asset->type = 'image';
-		$this->set($imageAssetKey, $asset);
+		// Create Sprite Asset
+    	// Css: Do we send it through filters?
+		$cssAsset = new SpriteCssAsset($spriteAsset);
+		$cssAsset->type = 'css';
+		$url = $this->router->generate('_odl_asset', array(
+			'name' => $cssAssetKey,
+			'time' => $spriteAsset->getLastModified()
+		));
+		$cssAsset->setTargetPath($url);
+		$this->set($cssAssetKey, $cssAsset);
     }
 
     public function getSprites() {
@@ -232,7 +242,7 @@ class YAMLAssetManager
 
 			$url = $this->router->generate('_odl_asset', array(
 				'name' => $pathKey,
-				'v' => $asset->getLastModified()
+				'time' => $asset->getLastModified()
 			));
 			$asset->setTargetPath($url);
 			$this->set($pathKey, $asset);
@@ -243,7 +253,7 @@ class YAMLAssetManager
 		$pathKey = $package['name'];
 		$url = $this->router->generate('_odl_asset', array(
 			'name' => $pathKey,
-			'v' => $assetCollection->getLastModified()
+			'time' => $assetCollection->getLastModified()
 		));
 
 		$assetCollection->setTargetPath($url);

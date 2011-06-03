@@ -60,11 +60,11 @@ class AssetController
 	}
 
 	/**
-	 * @Route("/{name}",
-	 *  requirements={"name" = ".*"}, defaults={"name" = "css_bundle"},
+	 * @Route("/{time}/{name}",
+	 *  requirements={"name" = ".*", "time" = "[\d]+"},
 	 *  name="_odl_asset")
 	 */
-	public function assetAction($name)
+	public function assetAction($name, $time)
 	{
 		$manger = $this->container->get('asset.asset_manager');
 

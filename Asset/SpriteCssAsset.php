@@ -9,9 +9,13 @@ class SpriteCssAsset
 	extends BaseAsset
 {
 	protected $sprite;
-	public function __construct(ImageSprite $sprite, $url) {
-		$this->sprite = $sprite;
-		$this->setTargetPath($url);
+	public function __construct(SpriteImageAsset $spriteImageAsset) {
+		$this->sprite = $spriteImageAsset->getSpriteImage();
+		if (!$spriteImageUrl = $spriteImageAsset->getTargetPath()) {
+            throw new \Exception("TargetPath must be defined.");
+		}
+
+		$this->setTargetPath($spriteImageUrl);
 		parent::__construct();
 	}
 
