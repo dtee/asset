@@ -1,0 +1,24 @@
+[submodule "vendor/js/datatables"]
+	path = vendor/js/datatables
+	url = git://github.com/DataTables/DataTables.git
+[submodule "vendor/js/jquery-ui"]
+	path = vendor/js/jquery-ui
+	url = git://github.com/jquery/jquery-ui.git
+[submodule "vendor/js/jquery"]
+	path = vendor/js/jquery
+	url = git://github.com/jquery/jquery.git
+[submodule "vendor/js/jquery-mobile"]
+	path = vendor/js/jquery-mobile
+	url = git://github.com/jquery/jquery-mobile.git
+[submodule "vendor/js/highcharts"]
+	path = vendor/js/highcharts
+	url = git://github.com/highslide-software/highcharts.com.git
+[submodule "vendor/js/jquery-jqGrid"]
+	path = vendor/js/jquery-jqGrid
+	url = git://github.com/tonytomov/jqGrid.git
+[submodule "vendor/less/elements"]
+	path = vendor/less/elements
+	url = git://github.com/dmitryf/elements.git
+[submodule "vendor/less/blueprint"]
+	path = vendor/less/blueprint
+	url = git://github.com/omnifroodle/blueprint.less.git
