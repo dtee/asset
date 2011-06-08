@@ -1,7 +1,8 @@
 <?php
 namespace Odl\AssetBundle\Twig\Extension;
 
-use Symfony\Bundle\FrameworkBundle\Templating\Helper\AssetsHelper;
+use Symfony\Component\Templating\Asset\PackageInterface;
+use Odl\AssetBundle\Asset\YAMLAssetManager;
 
 use Symfony\Component\DependencyInjection\Container;
 use Assetic\Asset\AssetInterface;
@@ -10,17 +11,18 @@ use Assetic\Asset\AssetCollection;
 class AssetExtension
 	extends \Twig_Extension
 {
-	private $container;
-	private $debug;
+	private $assetManager;
 	private $assetsHelper;
+    private $debug;
 
     public function __construct(
-        Container $container,
-        AssetsHelper $assetsHelper)
+        YAMLAssetManager $assetManager,
+        PackageInterface $assetsHelper,
+        $debug)
     {
         $this->assetsHelper = $assetsHelper;
-        $this->container = $container;
-        $this->debug = $container->get('kernel')->isDebug();
+        $this->assetManager = $assetManager;
+        $this->debug = $debug;
     }
 
     /**
@@ -41,15 +43,12 @@ class AssetExtension
     		$names = array($names);
     	}
 
-    	$managerName = 'asset.asset_manager';
-    	$assetManager = $this->container->get($managerName);
-
     	$retVal = '';
     	foreach ($names as $name)
     	{
-	    	if ($assetManager->has($name))
+	    	if ($this->assetManager->has($name))
 	    	{
-	    		$asset = $assetManager->get($name);
+	    		$asset = $this->assetManager->get($name);
 	    		$retVal .= $this->getAssetHTML($asset);
 	    	}
 	    	else

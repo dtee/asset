@@ -13,10 +13,11 @@
 	
     <services>
     	<!-- Register asset extension so that user could use jumbo filter -->
-        <service id="twig.extension.acme.asset" class="%asset.asset_twig_extension.class%" public="false">
+        <service id="twig.extension.asset" class="%asset.asset_twig_extension.class%" public="false" >
             <tag name="twig.extension" />
-            <argument type="service" id="service_container" />
-            <argument type="service" id="templating.helper.assets" />
+            <argument type="service" id="asset.asset_manager" />
+            <argument type="service" id="templating.helper.assets" strict="false" />
+            <argument>%kernel.debug%</argument>
         </service>
         
         <service id="asset.asset_manager" class="%asset.asset_manager.class%" public="true">
