@@ -22,3 +22,9 @@
 [submodule "vendor/less/blueprint"]
 	path = vendor/less/blueprint
 	url = git://github.com/omnifroodle/blueprint.less.git
+[submodule "vendor/js/jquery-file-upload"]
+	path = vendor/js/jquery-file-upload
+	url = git://github.com/blueimp/jQuery-File-Upload.git
+[submodule "vendor/js/jquery-form"]
+	path = vendor/js/jquery-form
+	url = git://github.com/malsup/form.git
