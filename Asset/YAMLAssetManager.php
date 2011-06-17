@@ -44,7 +44,7 @@ class YAMLAssetManager
 
         if ($filename && file_exists($filename))
         {
-            $config = YAML::load($filename);
+            $config = YAML::parse($filename);
             return $config;
         }
         else
