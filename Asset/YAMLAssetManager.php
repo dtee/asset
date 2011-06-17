@@ -22,38 +22,36 @@ use Assetic\Asset\AssetInterface;
 class YAMLAssetManager
 {
     protected $assets = array();
-	protected $kernel;
-	protected $debug = true;
-	protected $router;
+    protected $kernel;
+    protected $debug = true;
+    protected $router;
 
-	public function __construct(
-		Kernel $kernel,
-		Router $router,
-		$assetYamlPath)
-	{
-		$this->kernel = $kernel;
-		$this->router = $router;
+    public function __construct(Kernel $kernel, Router $router, $assetYamlPath)
+    {
+        $this->kernel = $kernel;
+        $this->router = $router;
 
-		$yamlConfig = $this->getConfig($assetYamlPath);
-		$this->loadFromConfig($yamlConfig);
-	}
+        $yamlConfig = $this->getConfig($assetYamlPath);
+        $this->loadFromConfig($yamlConfig);
+    }
 
-	protected function getConfig($filename) {
-		if (startsWith($filename, '@'))
-		{
-			$filename = $kernel->locateResource($yamlFilePath);
-		}
+    protected function getConfig($filename)
+    {
+        if (startsWith($filename, '@'))
+        {
+            $filename = $this->kernel->locateResource($filename);
+        }
 
-		if ($filename && file_exists($filename))
-		{
-			$config = YAML::load($filename);
-			return $config;
-		}
-		else
-		{
-			throw new FileNotFoundException($filename);
-		}
-	}
+        if ($filename && file_exists($filename))
+        {
+            $config = YAML::load($filename);
+            return $config;
+        }
+        else
+        {
+            throw new FileNotFoundException($filename);
+        }
+    }
 
     public function has($name)
     {
@@ -77,56 +75,61 @@ class YAMLAssetManager
 
     /**
      * Sprite splits into two assets:
-     * 	Image asset and css asset
+     * Image asset and css asset
      */
-    protected function loadSprite($package) {
-    	$name = $package['name'];
-    	if (isset($this->sprites[$name])) {
-			throw new Exception("Duplicate sprite resources {$name}");
-    	}
+    protected function loadSprite($package)
+    {
+        $name = $package['name'];
+        if (isset($this->sprites[$name]))
+        {
+            throw new Exception("Duplicate sprite resources {$name}");
+        }
 
-    	$path = $package['resources'];
-    	$gutter = isset($package['gutter']) ? $package['gutter'] : null;
-    	$path = $this->getAbsolutePaths($path, false);
-    	$imageSprite = new ImageSprite($path, $gutter);
+        $path = $package['resources'];
+        $gutter = isset($package['gutter']) ? $package['gutter'] : null;
+        $path = $this->getAbsolutePaths($path, false);
+        $imageSprite = new ImageSprite($path, $gutter);
 
-    	$this->sprites[$name] = $name;
+        $this->sprites[$name] = $name;
 
-    	$cssAssetKey = $this->getSpriteCssName($name);
-		$imageAssetKey = $this->getSpriteImageName($name);
+        $cssAssetKey = $this->getSpriteCssName($name);
+        $imageAssetKey = $this->getSpriteImageName($name);
 
-		// Create Image Asset
-		$spriteAsset = new SpriteImageAsset($imageSprite);
-		$spriteImageUrl = $this->router->generate('_odl_asset', array(
-			'name' => $imageAssetKey,
-			'time' => $spriteAsset->getLastModified()
-		));
-		$spriteAsset->setTargetPath($spriteImageUrl);
-		$spriteAsset->type = 'image';
-		$this->set($imageAssetKey, $spriteAsset);
+        // Create Image Asset
+        $spriteAsset = new SpriteImageAsset($imageSprite);
+        $spriteImageUrl = $this->router->generate('_odl_asset', array(
+                'name' => $imageAssetKey,
+                'time' => $spriteAsset->getLastModified()
+        ));
+        $spriteAsset->setTargetPath($spriteImageUrl);
+        $spriteAsset->type = 'image';
+        $this->set($imageAssetKey, $spriteAsset);
 
-		// Create Sprite Asset
-    	// Css: Do we send it through filters?
-		$cssAsset = new SpriteCssAsset($spriteAsset);
-		$cssAsset->type = 'css';
-		$url = $this->router->generate('_odl_asset', array(
-			'name' => $cssAssetKey,
-			'time' => $spriteAsset->getLastModified()
-		));
-		$cssAsset->setTargetPath($url);
-		$this->set($cssAssetKey, $cssAsset);
+        // Create Sprite Asset
+        // Css: Do we send it through filters?
+        $cssAsset = new SpriteCssAsset($spriteAsset);
+        $cssAsset->type = 'css';
+        $url = $this->router->generate('_odl_asset', array(
+                'name' => $cssAssetKey,
+                'time' => $spriteAsset->getLastModified()
+        ));
+        $cssAsset->setTargetPath($url);
+        $this->set($cssAssetKey, $cssAsset);
     }
 
-    public function getSprites() {
-    	return $this->sprites;
+    public function getSprites()
+    {
+        return $this->sprites;
     }
 
-    public function getSpriteImageName($name) {
-		return "sprite/image/{$name}";
+    public function getSpriteImageName($name)
+    {
+        return "sprite/image/{$name}";
     }
 
-    public function getSpriteCssName($name) {
-    	return "sprite/css/{$name}";
+    public function getSpriteCssName($name)
+    {
+        return "sprite/css/{$name}";
     }
 
     /**
@@ -136,63 +139,79 @@ class YAMLAssetManager
      */
     protected function getAbsolutePaths(array $paths, $isIncludeBundlePath)
     {
-    	$retVal = array();
-    	foreach ($paths as $pathInfo)
-    	{
-    		if (is_array($pathInfo) && isset($pathInfo['local'])) {
-    			$path = $pathInfo['local'];
-    		}
-    		else {
-    			$path = $pathInfo;
-    		}
+        $retVal = array();
+        foreach ( $paths as $pathInfo )
+        {
+            if (is_array($pathInfo))
+            {
+                if (isset($pathInfo['local']))
+                {
+                    $path = $pathInfo['local'];
+                }
+                else if (isset($pathInfo['route']))
+                {
+                    if (!isset($pathInfo['route_params']) || !is_array($pathInfo['route_params']))
+                    {
+                        $pathInfo['route_params'] = array();
+                    }
 
-    		if (!$path)
-    		{
-    			throw new \Exception("path must not be null");
-    		}
+                    $retVal[] = $pathInfo;
+                    continue;
+                }
+            }
+            else
+            {
+                $path = $pathInfo;
+            }
 
-    		if (startsWith($path, '@'))
-    		{
-				$filename = $this->kernel->locateResource($path);
-    		}
-    		else
-    		{
-    			$filename = $path;
-    		}
+            if (!$path)
+            {
+                throw new \Exception("path must not be null");
+            }
 
-			if (!$filename || !file_exists($filename))
-			{
-			    if ($this->kernel->isDebug())
-				    throw new FileNotFoundException($filename);
+            if (startsWith($path, '@'))
+            {
+                $filename = $this->kernel->locateResource($path);
+            }
+            else
+            {
+                $filename = $path;
+            }
 
-				continue;
-			}
+            if (!$filename || !file_exists($filename))
+            {
+                if ($this->kernel->isDebug())
+                    throw new FileNotFoundException($filename);
 
-			if ($isIncludeBundlePath)
-			{
-				$name = substr($path, 1);
-				list($bundleName, $path) = explode('/', $name, 2);
-				$bundle = $this->kernel->getBundle($bundleName, true);
-				$bundlePath = $bundle->getPath();
+                continue;
+            }
 
-				$fileInfo = array(
-					'root' => str_replace($bundleName, '', $bundlePath),
-					'full_path' => $filename
-				);
+            if ($isIncludeBundlePath)
+            {
+                $name = substr($path, 1);
+                list($bundleName, $path) = explode('/', $name, 2);
+                $bundle = $this->kernel->getBundle($bundleName, true);
+                $bundlePath = $bundle->getPath();
 
-				if (is_array($pathInfo))
-				{
-					$fileInfo = array_merge($fileInfo, $pathInfo);
-				}
-			}
-			else {
-				$fileInfo = $filename;
-			}
+                $fileInfo = array(
+                        'root' => str_replace($bundleName, '', $bundlePath),
+                        'full_path' => $filename
+                );
 
-			$retVal[] = $fileInfo;
-    	}
+                if (is_array($pathInfo))
+                {
+                    $fileInfo = array_merge($fileInfo, $pathInfo);
+                }
+            }
+            else
+            {
+                $fileInfo = $filename;
+            }
 
-    	return $retVal;
+            $retVal[] = $fileInfo;
+        }
+
+        return $retVal;
     }
 
     /**
@@ -202,62 +221,81 @@ class YAMLAssetManager
      */
     protected function loadPackage(array $package)
     {
-		$lessImportPaths = isset($package['less_import_paths']) ? $package['less_import_paths'] : array();
-		$lessImportPaths = $this->getAbsolutePaths($lessImportPaths, false);
+        $lessImportPaths = isset($package['less_import_paths']) ? $package['less_import_paths'] : array();
+        $lessImportPaths = $this->getAbsolutePaths($lessImportPaths, false);
 
-		$options = array('importDir' => $lessImportPaths);
-		$lessFilter = new LessphpOptionsFilter(null, $options);
-		$cssRewriteFilter = new CssRewriteFilter();
+        $options = array(
+                'importDir' => $lessImportPaths
+        );
+        $lessFilter = new LessphpOptionsFilter(null, $options);
+        $cssRewriteFilter = new CssRewriteFilter();
 
-		$files = $this->getAbsolutePaths($package['resources'], true);
-    	$assetCollection = new AssetCollection();
-		$isCss = false;
-		foreach ($files as $fileInfo)
-		{
-			$filename = $fileInfo['full_path'];
-			$sourceRoot = (isset($fileInfo['source_root'])) ? $fileInfo['source_root'] : null;
-			$sourcePath = (isset($fileInfo['source_path'])) ? $fileInfo['source_path'] : null;
+        $files = $this->getAbsolutePaths($package['resources'], true);
+        $assetCollection = new AssetCollection();
+        $isCss = false;
 
-			$asset = new FileAsset($filename, array(), $sourceRoot, $sourcePath);
-			$asset->type = $package['type'];
+        foreach ( $files as $fileInfo )
+        {
+            if (isset($fileInfo['route']))
+            {
+                $asset = new RouteAsset($fileInfo['route'], $fileInfo['route_params']);
+                $url = $this->router->generate($fileInfo['route'], $fileInfo['route_params']);
+                $asset->type = $package['type'];
+                $asset->setTargetPath($url);
+            }
+            else
+            {
+                $filename = $fileInfo['full_path'];
+                $sourceRoot = (isset($fileInfo['source_root'])) ? $fileInfo['source_root'] : null;
+                $sourcePath = (isset($fileInfo['source_path'])) ? $fileInfo['source_path'] : null;
 
-			if (endsWith($filename, '.less')) {
-				$asset->ensureFilter($lessFilter);
-			}
+                $asset = new FileAsset($filename, array(), $sourceRoot, $sourcePath);
+                $asset->type = $package['type'];
 
-			if ($asset->type == 'css') {
-				$asset->ensureFilter($cssRewriteFilter);
-			}
+                if ($this->debug)
+                {
+                    $rootPath = $fileInfo['root'];
+                    $pathKey = str_replace($rootPath, '', $filename);
+                    $pathKey = trim($pathKey, '/');
+                }
+                else
+                {
+                    $filename .= $asset->getLastModified();
+                    $pathKey = md5($filename);
+                }
 
-			$assetCollection->add($asset);
-			if ($this->debug) {
-				$rootPath = $fileInfo['root'];
-				$pathKey = str_replace($rootPath, '', $filename);
-				$pathKey = trim($pathKey, '/');
-			}
-			else {
-				$filename .= $asset->getLastModified();
-				$pathKey = md5($filename);
-			}
+                $url = $this->router->generate('_odl_asset', array(
+                        'name' => $pathKey,
+                        'time' => $asset->getLastModified()
+                ));
+                $asset->setTargetPath($url);
+                $this->set($pathKey, $asset);
+            }
 
-			$url = $this->router->generate('_odl_asset', array(
-				'name' => $pathKey,
-				'time' => $asset->getLastModified()
-			));
-			$asset->setTargetPath($url);
-			$this->set($pathKey, $asset);
-		}
+            if (endsWith($filename, '.less'))
+            {
+                $asset->ensureFilter($lessFilter);
+            }
 
-		$assetCollection->type = $package['type'];
+            if ($asset->type == 'css')
+            {
+                $asset->ensureFilter($cssRewriteFilter);
+            }
 
-		$pathKey = $package['name'];
-		$url = $this->router->generate('_odl_asset', array(
-			'name' => $pathKey,
-			'time' => $assetCollection->getLastModified()
-		));
+            $asset->type = $package['type'];
+            $assetCollection->add($asset);
+        }
 
-		$assetCollection->setTargetPath($url);
-		$this->set($pathKey, $assetCollection);
+        $assetCollection->type = $package['type'];
+
+        $pathKey = $package['name'];
+        $url = $this->router->generate('_odl_asset', array(
+                'name' => $pathKey,
+                'time' => $assetCollection->getLastModified()
+        ));
+
+        $assetCollection->setTargetPath($url);
+        $this->set($pathKey, $assetCollection);
     }
 
     /**
@@ -266,19 +304,19 @@ class YAMLAssetManager
      * @param array $config
      * @throws FileNotFoundException
      */
-	protected function loadFromConfig(array $config)
-	{
-		foreach ($config as $key => $package)
-		{
-			$package['name'] = $key;
-			if ($package['type'] == 'sprite')
-			{
-				$this->loadSprite($package);
-			}
-			else
-			{
-				$this->loadPackage($package);
-			}
-		}
-	}
+    protected function loadFromConfig(array $config)
+    {
+        foreach ( $config as $key => $package )
+        {
+            $package['name'] = $key;
+            if ($package['type'] == 'sprite')
+            {
+                $this->loadSprite($package);
+            }
+            else
+            {
+                $this->loadPackage($package);
+            }
+        }
+    }
 }

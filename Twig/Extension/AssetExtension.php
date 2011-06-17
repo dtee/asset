@@ -87,7 +87,6 @@ class AssetExtension
 		return $retVal;
     }
 
-
     /**
      * Returns the name of the extension.
      *

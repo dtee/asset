@@ -14,133 +14,147 @@ use Assetic\Cache\FilesystemCache;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
-class AssetController
-	extends Controller
+class AssetController extends Controller
 {
-	/**
-	 * @Route("/info")
-	 * @Template()
-	 */
-	public function info() {
-		return new Response(phpInfo());
-	}
 
-	/**
-	 * @Route("/test")
-	 * @Template()
-	 */
-	public function testAction() {
-		$name = 'places';
-		$manager = $this->container->get('asset.asset_manager');
+    /**
+     * @Route("/info")
+     * @Template()
+     */
+    public function info()
+    {
+        return new Response(phpInfo());
+    }
 
-		$imageName = $manager->getSpriteImageName($name);
-		$cssName = $manager->getSpriteCssName($name);
+    /**
+     * @Route("/test")
+     * @Template()
+     */
+    public function testAction()
+    {
+        $name = 'places';
+        $manager = $this->container->get('asset.asset_manager');
 
-		$spriteAsset = $manager->get($cssName);
-		$sprite = $spriteAsset->getSprite();
+        $imageName = $manager->getSpriteImageName($name);
+        $cssName = $manager->getSpriteCssName($name);
 
-		$sprite->getSprite();
-		$images = $sprite->getImages();
+        $spriteAsset = $manager->get($cssName);
+        $sprite = $spriteAsset->getSprite();
 
-		$router = $this->get('router');
-		$imageUrl = $router->generate('_odl_asset', array('name' => $imageName));
+        $sprite->getSprite();
+        $images = $sprite->getImages();
 
-		$hash = array();
-		foreach ($images as $image) {
-			$key = $image->getKey();
-			$hash[$key] = $image->toArray();
-		}
+        $router = $this->get('router');
+        $imageUrl = $router->generate('_odl_asset', array(
+                'name' => $imageName
+        ));
 
-		return array(
-			'imageUrl' => $imageUrl,
-			'cssUrl' => $router->generate('_odl_asset', array('name' => $cssName)),
-			'hash' => $hash,
-			'sprite' => $sprite
-		);
-	}
+        $hash = array();
+        foreach ( $images as $image )
+        {
+            $key = $image->getKey();
+            $hash[$key] = $image->toArray();
+        }
 
-	/**
-	 * @Route("/{time}/{name}",
-	 *  requirements={"name" = ".*", "time" = "[\d]+"},
-	 *  name="_odl_asset")
-	 */
-	public function assetAction($name, $time)
-	{
-		$manger = $this->container->get('asset.asset_manager');
+        return array(
+                'imageUrl' => $imageUrl,
+                'cssUrl' => $router->generate('_odl_asset', array(
+                        'name' => $cssName
+                )),
+                'hash' => $hash,
+                'sprite' => $sprite
+        );
+    }
 
-        if (!$manger->has($name)) {
+    /**
+     * @Route("/{time}/{name}",
+     * requirements={"name" = ".*", "time" = "[\d]+"},
+     * name="_odl_asset")
+     */
+    public function assetAction($name, $time)
+    {
+        $manger = $this->container->get('asset.asset_manager');
+
+        if (!$manger->has($name))
+        {
             throw new NotFoundHttpException(sprintf('The "%s" asset could not be found.', $name));
         }
-        else {
-        	// See if file exists in resource directory??
+        else
+        {
+            // See if file exists in resource directory??
         }
 
-		$asset = $manger->get($name);
+        $asset = $manger->get($name);
         $typeHash = array(
-        	'css' => 'text/css',
-        	'image' => 'image/png',
-        	'javascript' => 'application/javascript'
+                'css' => 'text/css',
+                'image' => 'image/png',
+                'javascript' => 'application/javascript'
         );
 
-		if ($asset)
-		{
-			$request = $this->get('request');
-			$response = new Response();
-			if (isset($typeHash[$asset->type]))
-			{
-				$response->headers->set('Content-Type', $typeHash[$asset->type]);
-			}
+        if ($asset)
+        {
+            // if RouterAsset, try to get content via Controller
 
-			$kernel = $this->get('kernel');
-			$isDebug = $kernel->isDebug();
+            $request = $this->get('request');
+            $response = new Response();
+            if (isset($typeHash[$asset->type]))
+            {
+                $response->headers->set('Content-Type', $typeHash[$asset->type]);
+            }
 
-	        if (null !== $lastModified = $asset->getLastModified()) {
-	            $date = new \DateTime();
-	            $date->setTimestamp($lastModified);
-	            $response->setLastModified($date);
+            $kernel = $this->get('kernel');
+            $isDebug = $kernel->isDebug();
 
-	            $date = new \DateTime();
-	            $year = $date->format("Y") + 3;
-	            $date->setDate($year, 1, 1);
-	            $response->setExpires($date);
-	        }
+            if (null !== $lastModified = $asset->getLastModified())
+            {
+                $date = new \DateTime();
+                $date->setTimestamp($lastModified);
+                $response->setLastModified($date);
 
-	        // Run though yui when debug is not enabled!
-	        if ($response->isNotModified($request)) {
-	            return $response;
-	        }
+                $date = new \DateTime();
+                $year = $date->format("Y") + 3;
+                $date->setDate($year, 1, 1);
+                $response->setExpires($date);
+            }
 
-	        // last-modified
-	        if (!$isDebug) {
-		        $cache = null;
-				$isCompress = true;
+            // Run though yui when debug is not enabled!
+            if ($response->isNotModified($request))
+            {
+                return $response;
+            }
 
-		        if ($isCompress && $filter = $this->getYuiFilter($asset))
-		        {
-		        	$asset->ensureFilter($filter);
+            // last-modified
+            if (!$isDebug)
+            {
+                $cache = null;
+                $isCompress = true;
 
-		        	// We should cache the result
-		        	$cacheDir = $kernel->getCacheDir() . '/asset';
-		        	$cache = new FilesystemCache($cacheDir);
-		        }
+                if ($isCompress && $filter = $this->getYuiFilter($asset))
+                {
+                    $asset->ensureFilter($filter);
 
-	    		if ($cache)
-	    		{
-	    			$asset = $this->cachifyAsset($asset, $cache);
-	    		}
-	        }
+                    // We should cache the result
+                    $cacheDir = $kernel->getCacheDir() . '/asset';
+                    $cache = new FilesystemCache($cacheDir);
+                }
 
-	        $response->setContent($asset->dump());
-			return $response;
-		}
-	}
+                if ($cache)
+                {
+                    $asset = $this->cachifyAsset($asset, $cache);
+                }
+            }
 
-	protected function getYuiFilter($asset)
-	{
-		$kernel = $this->get('kernel');
-		$javaPath = '/usr/bin/java';
-		$resourcePath = '@OdlAssetBundle/external/yuicompressor-2.4.6.jar';
-		$jarPath = $kernel->locateResource($resourcePath);
+            $response->setContent($asset->dump());
+            return $response;
+        }
+    }
+
+    protected function getYuiFilter($asset)
+    {
+        $kernel = $this->get('kernel');
+        $javaPath = '/usr/bin/java';
+        $resourcePath = '@OdlAssetBundle/external/yuicompressor-2.4.6.jar';
+        $jarPath = $kernel->locateResource($resourcePath);
 
 		if (!file_exists($javaPath))
 			return null;
