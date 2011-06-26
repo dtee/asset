@@ -7,9 +7,6 @@
 [submodule "vendor/js/jquery"]
 	path = vendor/js/jquery
 	url = git://github.com/jquery/jquery.git
-[submodule "vendor/js/jquery-mobile"]
-	path = vendor/js/jquery-mobile
-	url = git://github.com/jquery/jquery-mobile.git
 [submodule "vendor/js/highcharts"]
 	path = vendor/js/highcharts
 	url = git://github.com/highslide-software/highcharts.com.git
