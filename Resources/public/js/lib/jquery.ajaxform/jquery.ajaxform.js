@@ -1,267 +1,331 @@
 log = function(value) {
-	if (console && console.log) {
-		console.log(value);
-	}
+    if (console && console.log) {
+        console.log(value);
+    }
 };
 
 (function($) {
-	var settings = {
-		disable_session_lock : false, // Allow only one submit at a time
+    
+    /****************** Helper functions ********************/
+    
+    /**
+     * @params $container jQuery object of possible container (div, span, etc)
+     * @params errors array of error for the container
+     */
+   var renderError = function($container, errors) {
+        var errorElement = $container.find('> .error');
+        if (errorElement.length == 0) {
+            errorElement = $('<div class="error" />');
+            $container.append(errorElement);
+        }
 
-		class_bad : 'bad',
-		class_good : 'good',
-		url : null,
-		data : {}, // Additional data to upload
-		timeout : 10000, // 10 seconds time out
-		ajax_upload : false, // enable file upload?
-		dataType : 'text', // Always text
-		type : 'POST', // Always post
+        if (errors != null) {
+            $container.addClass(settings.class_bad).removeClass(settings.class_good);
+            errorElement.css('display', 'block').html(errors.join('<br/>'));
+        }
+        else {
+            $container.addClass(settings.class_good).removeClass(settings.class_bad);
+            errorElement.css('display', 'none').html('');
+        }
+    };
 
-		buttons : [], // Array of clickable jquery elements in the $this
+    /**
+     * Serialize form data + any custom data
+     * 
+     * @param data
+     * @returns
+     */
+    var serialize = function(form, data) {
+        var serializedData = form.serializeArray();
+        for ( var key in data) {
+            value = $.toJSON(data[key]);
+            serializedData.push({
+                name : key,
+                value : value
+            });
+        }
 
-		// Define functions
-		custom_success : null, // call back after ajax is done
-		custom_failure : null
-	// call on failure
-	};
+        return $.param(serializedData, false);
+    };
 
-	// Regular inline hidden error element
-	settings.error_formatter = function(container, errors) {
-		var errorElement = container.find('> .error');
-		if (errorElement.length == 0) {
-			errorElement = $('<div class="error" />');
-			container.append(errorElement);
-		}
+    /****************** Class starts here functions ********************/
+    
+    /**
+     * @param $form jQuery Form element
+     * @options options {} - see AjaxForm.options and jQuery.ajax for supported options
+     */
+    var AjaxForm = function($form, options) {
+        this.$form = $form;
+        var ajaxForm = this;
+        
+        if (!options) {
+            options = {};
+        }
 
-		if (errors != null) {
-			container.addClass(settings.class_bad).removeClass(
-					settings.class_good);
+        // Guess which buttons we should disable when submit is triggered
+        if (!options.buttons) {
+            options.buttons = $form.find(':button, :submit');
+        }
 
-			errorElement.css('display', 'block').html(errors.join('<br/>'));
-		} else {
-			container.addClass(settings.class_good).removeClass(
-					settings.class_bad);
+        // Try to guess url to submit to
+        if (!options.url) {
+            options.url = $form.attr('action');
+            if (! options.url) {
+                options.url = window.location.href;
+            }
+        }
 
-			errorElement.css('display', 'none').html('');
-		}
-	};
+        // Hi-jack form Submit
+        $form.bind('submit', function(event) {
+            // Prevents quick double submit
+            setTimeout(function() {
+                ajaxForm.submit()
+            }, 100);
 
-	var success = function(data, status, xhr) {
-		log(data);
-		var returnedJson = $.parseJSON(data);
-		var errorList = returnedJson.error;
+            return false;
+        });
 
-		// Reset all errors
-		$this.find('.error').html('').css('display', 'none');
+        var mergedOptions = $.extend({}, settings, options);
+        this.options = $.extend(AjaxForm.options, options);
+    };
+    
+    AjaxForm.options = {
+        disable_session_lock : false, // Allow only one submit at a time
 
-		for ( var index in errorList) {
-			if (index == '*') {
-				continue;
-			}
+        class_bad : 'bad',
+        class_good : 'good',
+        url : null,
+        data : {},                  // Additional data to upload
+        timeout : 10000,            // 10 seconds time out
+        ajax_upload : false,        // enable file upload?
+        dataType : 'text',          // Always text
+        type : 'POST',              // Always post
+        buttons : [],               // Array of clickable jquery elements in the form
 
-			var errors = errorList[index];
-			var container = $this.find('#' + index + '-container');
-			if (container.length == 0) {
-				container = $this.find('#' + index).parent();
-			}
+        // Define functions
+        error_renderer: renderError,      // format error 
+        custom_success : null,            // call back after ajax is done
+        custom_failure : null,            // call on failure
+    };
 
-			settings.error_formatter(container, errors);
-		}
+    /**
+     * See jQuery.ajax.success(data, textStatus, jqXHR)
+     */
+    AjaxForm.prototype.success = function(data, status, xhr) {
+        var returnedJson = $.parseJSON(data);
+        var errorList = returnedJson.error;
 
-		if (settings.custom_success) {
-			settings.custom_success(returnedJson);
-		}
+        // Reset all errors
+        this.$form.find('.error').html('').css('display', 'none');
 
-		if (returnedJson.href) {
-			window.location.href = returnedJson.href;
-		}
+        var isErrorFree = true;
+        for ( var index in errorList) {
+            var errors = errorList[index];
+            var container = this.$form.find('#' + index + '-container');
+            if (container.length == 0) {
+                container = this.$form.find('#' + index).parent();
+            }
+            
+            if (errors && errors.length > 0) {
+                isErrorFree = false;
+            }
 
-		// Prevents double clicking
-		endSession();
-	};
+            this.options.error_renderer(container, errors);
+        }
+        
+        // Only call custom sucess function if it free form error
+        if (this.options.custom_success && isErrorFree) {
+            this.options.custom_success(returnedJson);
+        }
 
-	var error = function(data, status, xhr) {
-		if (settings.custom_failure) {
-			settings.custom_failure(data, status, xhr);
-		} else {
-			alert('error...');
-		}
+        // Window redirect, we should keep buttons disabled
+        if (returnedJson.href) {
+            window.location.href = returnedJson.href;
+            this.endSession(true);
+        }
+        else {
+            this.endSession();       // Enable user to submit again
+        }
+    };
 
-		endSession();
-	};
+    /**
+     * See jQuery.ajax.error(data, textStatus, jqXHR)
+     */
+    AjaxForm.prototype.error = function(jqXHR, textStatus, errorThrown) {
+        if (this.options.custom_failure) {
+            this.options.custom_failure(jqXHR, textStatus, errorThrown);
+        }
+        else {
+            alert('error...');
+        }
 
-	var methods = {};
-	var $buttons = null;
+        this.endSession();
+    };
 
-	/**
-	 * Init the $this
-	 * 
-	 * @param options
-	 * @returns
-	 */
-	methods.init = function(options) {
-		return this.each(function() {
-			// If the element is not $this element, contine
-			$this = $(this);
-			if (this.tagName != 'FORM') {
-				return;
-			}
-			
-			var data = $this.data('ajaxform');
-			if (data) {
-				return;			// Already initailized
-			}
+    /**
+     * Takes standard jQuery.ajax() options. Does the following:
+     * 
+     * 1. Submit using jQuery for jQuery Form Upload
+     * 2. On success, trigger this.success() function
+     * 3. On timeout, trigger this.error() function
+     * 
+     * @param options {} additional this.options override
+     */
+    AjaxForm.prototype.submit = function(options) {
+        if (this.sessionTimeoutHandle) {      // do nothing - prevents double submit
+            return;
+        }
 
-			if (!options) {
-				options = {};
-			}
+        if (options) {
+            options = $.extend({}, this.options, options);
+        }
+        else {
+            options = this.options;
+        }
 
-			if (!options.buttons) {
-				options.buttons = $this.find(':button, :submit');
-			}
+        this.startSession(); // Start up a session
 
-			if (!options.url) {
-				options.url = $this.attr('action');
-			}
+        data = {};
+        if (options.onsubmit) {
+            data = options.onsubmit();
+        }
 
-			$this.bind('submit', {form: $this}, function(event) {
-				// Prevents quick double submit
-				setTimeout(function() {
-						event.data.form.ajaxForm('submit');
-					}, 100
-				);
-			});
-			
-			if (!options.url) {
-				options.url = $(this).attr('action');
+        options.data = serialize(this.$form, data);      // Re-init data
+        options.dataType = 'text';                  // Lets submit text, jquery silently sollow parse error
+        options.type = 'POST';                      // Post is best
+        options.success = this.success;     // Can't let user override this function
+        options.error = this.error;         // Can't let user override this function
 
-				if (!options.url) {
-					options
-					options.url = window.location.href;
-				}
-			}
+        // If we have ajaxSubmit library installed
+        if ($.fn.ajaxSubmit) {
+            this.$form.ajaxSubmit(this);
+        }
+        else {
+            $.ajax(this);
+        }
+        
+        return false;
+    };
+    
+    /**
+     * Handles start of session
+     * 
+     * 1. set timeout timmer to end session if ajax call takes longer than expected
+     * 2. diable input buttons so that user can not submit another
+     * 3. todo: show progress bar
+     * 4. Set input fields to readonly
+     */
+    AjaxForm.prototype.startSession = function() {
+        if (this.options.disable_session_lock) {
+            // Let session time out after specified timeout
+            this.sessionTimeoutHandle = setTimeout(function() {
+                this.sessionTimeoutHandle = null;
+                this.endSession();
+            }, this.options.timeout);
+        }
 
-			var mergedOptions = $.extend({}, settings, options);
-			$this.data('ajaxform', mergedOptions);
-		});
-	};
+        // We can be fancy here... disable all buttons, add spinner, make input fields readonly
+        if (this.options.buttons) {
+            this.options.buttons.attr('disabled', true);
+        }
+        
+        // Set all input to readonly
+        this.$form.find('input').attr('readonly', true)
+    };
 
-	/**
-	 * Takes standard $.ajax() options
-	 * 
-	 * @param options
-	 * @returns
-	 */
-	methods.submit = function(options) {
-		return this.each(function() {
-			// If the element is not $this element, contine
-			$this = $(this);
+    /**
+     * Handles start of session
+     * 
+     * 1. kill timeout timmer
+     * 2. undo all the disable/readonly by startSession()
+     * 
+     * @params keepSessionAlive sometime, it's useful to keep buttons and fields disabled, like
+     *  setting window.location.href (It takes a while to load next page, and we want user to see
+     *  progress bar)
+     */
+    AjaxForm.prototype.endSession = function(keepSessionAlive) {
+        // Request finished before our session end
+        if (this.sessionTimeoutHandle) {
+            clearTimeout(this.sessionTimeoutHandle);
+        }
+        this.sessionTimeoutHandle = null;
+        
+        if (keepSessionAlive)
+        {
+            return;
+        }
+        
+        // Time to undo our fancyness
+        if (this.options.buttons) {
+            this.options.buttons.attr('disabled', false);
+        }
+        
+        // Un-set all input to readonly
+        this.$form.find('input').attr('readonly', false)
+    };
+    
+    /****************** jQuery Plugin starts here functions ******************/
+    var methods = {};
 
-			if (hasSession) { // do nothing
-				alert('On going session is happening, please wait it out.');
-				return;
-			} else {
-				startSession(); // Start up a session
-			}
+    /**
+     * jQuery wrapper
+     * 
+     * @param options
+     * @returns
+     */
+    methods.init = function(options) {
+        return this.each(function() {
+            $this = $(this);
+            
+            // If the element is not form element, continue on
+            if (this.tagName != 'FORM') {
+                return;
+            }
 
-			var data = {};
+            var ajaxForm = $this.data('ajaxform');
+            if (ajaxForm) {
+                return; // Already initailized
+            }
+            
+            ajaxForm  = new AjaxForm($this, options);
+            $this.data('ajaxform', options);
+        });
+    };
+    
+    methods.submit = function(options) {
+        return this.each(function() {
+            $this = $(this);
+            
+            // If the element is not form element, continue on
+            if (this.tagName != 'FORM') {
+                return;
+            }
 
-			if (options) {
-				$.extend(this.settings, options);
-				data = options.data;
-			}
+            var ajaxForm = $this.data('ajaxform');
+            if (ajaxForm) {
+                return; // Already initailized
+            }
+            else {
+                ajaxForm  = new AjaxForm($this, options);
+                $this.data('ajaxform', options);
+            }
+            
+            ajaxForm.submit(options);
+        });
+    };
 
-			if (settings.onsubmit) {
-				data = settings.onsubmit();
-			}
-
-			settings.data = serialize($this, data);
-			settings.dataType = 'text';
-			settings.type = 'POST';
-			settings.success = success;
-			settings.error = error;
-
-			if ($.fn.ajaxSubmit)
-			{
-				$this.ajaxSubmit(settings);
-			}
-			else {
-				$.ajax(settings);
-			}
-		};
-	};
-
-	/**
-	 * Serialize $this data + any custom data
-	 * 
-	 * @param data
-	 * @returns
-	 */
-	var serialize = function(form, data) {
-		var serializedData = form.serializeArray();
-		for ( var key in data) {
-			value = $.toJSON(data[key]);
-			serializedData.push({
-				name : key,
-				value : value
-			});
-		}
-
-		return $.param(serializedData, false);
-	};
-
-	$.fn.ajaxForm = function(method) {
-		// Method calling logic
-		if (methods[method]) {
-			return methods[method].apply(this, Array.prototype.slice.call(
-					arguments, 1));
-		} else if (typeof method === 'object' || !method) {
-			return methods.init.apply(this, arguments);
-		} else {
-			$.error('Method ' + method + ' does not exist on jQuery.ajaxForm');
-		}
-	};
-
-	/** Handles session **/
-	var hasSession = false;
-	var sessionTimeoutHandle = null;
-	var startSession = function() {
-		if (settings.disable_session_lock) {
-			return;
-		}
-
-		disableButtons();
-
-		hasSession = true;
-		sessionTimeoutHandle = setTimeout(function() {
-			sessionTimeoutHandle = null;
-			endSession();
-		}, settings.timeout);
-	};
-
-	var endSession = function() {
-		hasSession = false;
-
-		// enable all submitable buttons and input elements
-		enableFields();
-
-		// kill the session timer call back
-		if (sessionTimeoutHandle) {
-			sessionTimeoutHandle = null;
-			clearTimeout(sessionTimeoutHandle);
-		}
-	};
-
-	var disableFields = function() {
-		$this.find('input').attr('readonly', true)
-	};
-
-	var disableButtons = function() {
-		$buttons.attr('disabled', true);
-	}
-
-	var enableFields = function() {
-		$buttons.attr('disabled', false);
-		$this.find('input').attr('readonly', false);
-	};
+    $.fn.ajaxForm = function(method) {
+        // Method calling logic
+        if (methods[method]) {
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+        }
+        else {
+            if (typeof method === 'object' || !method) {
+                return methods.init.apply(this, arguments);
+            }
+            else {
+                $.error('Method ' + method + ' does not exist on jQuery.ajaxForm');
+            }
+        }
+    };
 })(jQuery);
