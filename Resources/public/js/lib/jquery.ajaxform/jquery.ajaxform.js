@@ -91,7 +91,6 @@ log = function(value) {
 	};
 
 	var methods = {};
-	var $this = null;
 	var $buttons = null;
 
 	/**
@@ -107,6 +106,11 @@ log = function(value) {
 			if (this.tagName != 'FORM') {
 				return;
 			}
+			
+			var data = $this.data('ajaxform');
+			if (data) {
+				return;			// Already initailized
+			}
 
 			if (!options) {
 				options = {};
@@ -120,14 +124,14 @@ log = function(value) {
 				options.url = $this.attr('action');
 			}
 
-			$this.submit(function() {
-				// Do timer call back so that it doesn't submit when
-				//	javascript error occur
-				setTimeout(methods.submit, 10);
-
-				return false;
+			$this.bind('submit', {form: $this}, function(event) {
+				// Prevents quick double submit
+				setTimeout(function() {
+						event.data.form.ajaxForm('submit');
+					}, 100
+				);
 			});
-
+			
 			if (!options.url) {
 				options.url = $(this).attr('action');
 
@@ -137,8 +141,8 @@ log = function(value) {
 				}
 			}
 
-			$.extend(settings, options);
-			$buttons = settings.buttons;
+			var mergedOptions = $.extend({}, settings, options);
+			$this.data('ajaxform', mergedOptions);
 		});
 	};
 
@@ -149,37 +153,42 @@ log = function(value) {
 	 * @returns
 	 */
 	methods.submit = function(options) {
-		if (hasSession) { // do nothing
-			alert('On going session is happening, please wait it out.');
-			return;
-		} else {
-			startSession(); // Start up a session
-		}
+		return this.each(function() {
+			// If the element is not $this element, contine
+			$this = $(this);
 
-		var data = {};
+			if (hasSession) { // do nothing
+				alert('On going session is happening, please wait it out.');
+				return;
+			} else {
+				startSession(); // Start up a session
+			}
 
-		if (options) {
-			$.extend(this.settings, options);
-			data = options.data;
-		}
+			var data = {};
 
-		if (settings.onsubmit) {
-			data = settings.onsubmit();
-		}
+			if (options) {
+				$.extend(this.settings, options);
+				data = options.data;
+			}
 
-		settings.data = methods.serialize(data);
-		settings.dataType = 'text';
-		settings.type = 'POST';
-		settings.success = success;
-		settings.error = error;
+			if (settings.onsubmit) {
+				data = settings.onsubmit();
+			}
 
-		if ($.fn.ajaxSubmit)
-		{
-			$this.ajaxSubmit(settings);
-		}
-		else {
-			$.ajax(settings);
-		}
+			settings.data = serialize($this, data);
+			settings.dataType = 'text';
+			settings.type = 'POST';
+			settings.success = success;
+			settings.error = error;
+
+			if ($.fn.ajaxSubmit)
+			{
+				$this.ajaxSubmit(settings);
+			}
+			else {
+				$.ajax(settings);
+			}
+		};
 	};
 
 	/**
@@ -188,8 +197,8 @@ log = function(value) {
 	 * @param data
 	 * @returns
 	 */
-	methods.serialize = function(data) {
-		var serializedData = $this.serializeArray();
+	var serialize = function(form, data) {
+		var serializedData = form.serializeArray();
 		for ( var key in data) {
 			value = $.toJSON(data[key]);
 			serializedData.push({
