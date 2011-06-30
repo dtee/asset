@@ -192,8 +192,7 @@ log = function(value) {
         options.error = this.error;         // Can't let user override this function
 
         // If we have ajaxSubmit library installed
-        log(options);
-        if (!$.fn.ajaxSubmit) {
+        if ($.fn.ajaxSubmit) {
             this.$form.ajaxSubmit(options);
         }
         else {
@@ -279,7 +278,6 @@ log = function(value) {
             }
 
             var ajaxForm = $this.data('ajaxform');
-            log(this.id);
             if (ajaxForm) {
                 return; // Already initailized
             }
