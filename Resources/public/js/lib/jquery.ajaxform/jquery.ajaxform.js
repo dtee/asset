@@ -85,8 +85,7 @@ log = function(value) {
             return false;
         });
 
-        var mergedOptions = $.extend({}, settings, options);
-        this.options = $.extend(AjaxForm.options, options);
+        this.options = $.extend({}, AjaxForm.options, options);
     };
     
     AjaxForm.options = {
@@ -134,8 +133,8 @@ log = function(value) {
         }
         
         // Only call custom sucess function if it free form error
-        if (this.options.custom_success && isErrorFree) {
-            this.options.custom_success(returnedJson);
+        if (this.custom_success && isErrorFree) {
+            this.custom_success(returnedJson);
         }
 
         // Window redirect, we should keep buttons disabled
@@ -177,19 +176,15 @@ log = function(value) {
         }
 
         if (options) {
-            options = $.extend({}, this.options, options);
+            options = $.extend({}, this, this.options, options);
         }
         else {
-            options = this.options;
+            options = $.extend({}, this, this.options);
         }
 
         this.startSession(); // Start up a session
-
-        data = {};
-        if (options.onsubmit) {
-            data = options.onsubmit();
-        }
-
+        data = {};      // Allow customd data
+        
         options.data = serialize(this.$form, data);      // Re-init data
         options.dataType = 'text';                  // Lets submit text, jquery silently sollow parse error
         options.type = 'POST';                      // Post is best
@@ -197,11 +192,12 @@ log = function(value) {
         options.error = this.error;         // Can't let user override this function
 
         // If we have ajaxSubmit library installed
-        if ($.fn.ajaxSubmit) {
-            this.$form.ajaxSubmit(this);
+        log(options);
+        if (!$.fn.ajaxSubmit) {
+            this.$form.ajaxSubmit(options);
         }
         else {
-            $.ajax(this);
+            $.ajax(options);
         }
         
         return false;
@@ -276,19 +272,20 @@ log = function(value) {
     methods.init = function(options) {
         return this.each(function() {
             $this = $(this);
-            
+
             // If the element is not form element, continue on
             if (this.tagName != 'FORM') {
                 return;
             }
 
             var ajaxForm = $this.data('ajaxform');
+            log(this.id);
             if (ajaxForm) {
                 return; // Already initailized
             }
             
             ajaxForm  = new AjaxForm($this, options);
-            $this.data('ajaxform', options);
+            $this.data('ajaxform', ajaxForm);
         });
     };
     
@@ -302,12 +299,9 @@ log = function(value) {
             }
 
             var ajaxForm = $this.data('ajaxform');
-            if (ajaxForm) {
-                return; // Already initailized
-            }
-            else {
+            if (!ajaxForm) {
                 ajaxForm  = new AjaxForm($this, options);
-                $this.data('ajaxform', options);
+                $this.data('ajaxform', ajaxForm);
             }
             
             ajaxForm.submit(options);
