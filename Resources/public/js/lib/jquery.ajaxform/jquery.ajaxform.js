@@ -114,9 +114,6 @@ log = function(value) {
         var returnedJson = $.parseJSON(data);
         var errorList = returnedJson.error;
 
-        // Reset all errors
-        this.$form.find('.error').html('').css('display', 'none');
-
         var isErrorFree = true;
         for ( var index in errorList) {
             var errors = errorList[index];
@@ -218,6 +215,9 @@ log = function(value) {
                 this.endSession();
             }, this.options.timeout);
         }
+
+        // Reset all errors
+        this.$form.find('.error').html('').css('display', 'none');
 
         // We can be fancy here... disable all buttons, add spinner, make input fields readonly
         if (this.options.buttons) {

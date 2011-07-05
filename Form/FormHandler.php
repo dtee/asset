@@ -29,7 +29,7 @@ abstract class FormHandler
 
     }
 
-    abstract protected function onSuccess($values) {
+    abstract protected function onSuccess() {
 
     }
 
@@ -39,7 +39,7 @@ abstract class FormHandler
         {
             $this->form->bindRequest($this->request);
             if ($this->form->isValid()) {
-
+                return $this->onSuccess();
             }
             else {
                 $this->errors = $this->ajaxErrorProvider->getErrors($this->form);
