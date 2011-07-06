@@ -30,4 +30,4 @@
 	url = git@github.com:dtee/jQuery-Hint.git
 [submodule "vendor/js/jquery-ajaxform"]
 	path = vendor/js/jquery-ajaxform
-	url = git@github.com:dtee/jQuery-Hint.git
+	url = git@github.com:dtee/jQuery-AjaxForm.git
