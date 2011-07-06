@@ -1,0 +1,28 @@
+[submodule "vendor/js/datatables"]
+        url = "git@cornerstone:DataTables/DataTables.git"
+        path = "vendor/js/datatables"
+[submodule "vendor/js/highcharts"]
+        url = "git@cornerstone:highslide-software/highcharts.com.git"
+        path = "vendor/js/highcharts"
+[submodule "vendor/js/jquery"]
+        url = "git@cornerstone:jquery/jquery.git"
+        path = "vendor/js/jquery"
+[submodule "vendor/js/jquery-file-upload"]
+        url = "git@cornerstone:blueimp/jQuery-File-Upload.git"
+        path = "vendor/js/jquery-file-upload"
+[submodule "vendor/js/jquery-form"]
+        url = "git@cornerstone:malsup/form.git"
+        path = "vendor/js/jquery-form"
+[submodule "vendor/js/jquery-jqGrid"]
+        url = "git@cornerstone:tonytomov/jqGrid.git"
+        path = "vendor/js/jquery-jqGrid"
+[submodule "vendor/js/jquery-ui"]
+        url = "git@cornerstone:jquery/jquery-ui.git"
+        path = "vendor/js/jquery-ui"
+[submodule "vendor/less/blueprint"]
+        url = "git@cornerstone:omnifroodle/blueprint.less.git"
+        path = "vendor/less/blueprint"
+[submodule "vendor/less/elements"]
+        url = "git@cornerstone:dmitryf/elements.git"
+        path = "vendor/less/elements"
+
