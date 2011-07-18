@@ -1,0 +1,44 @@
+{% extends "form_div_layout.html.twig" %}
+
+{% block form_widget %}
+{% spaceless %}
+    <div {{ block('attributes') }}>
+        {{ block('field_rows') }}
+        {{ form_rest(form) }}
+    </div>
+{% endspaceless %}
+{% endblock form_widget %}
+
+{% block field_row %}
+    {% spaceless %}
+        {% set formTypes = form.get('types') %}
+        {% set name = form.get('name') %}
+
+        <div class="{{ formTypes | join(" ") }} {{ name }}" id="{{ form.get('id') }}-container">
+            {# TODO: would be nice to rename this variable to "field" #}
+            {{ form_label(form) | raw }}
+            {{ form_widget(form) }}
+            {{ form_errors(form) }}
+            <div class="error hide"></div>
+        </div>
+    {% endspaceless %}
+{% endblock field_row %}
+
+{% block field_label %}
+    {% spaceless %}
+        <label for="{{ id }}" class="">{{ label|trans }}</label>
+    {% endspaceless %}
+{% endblock field_label %}
+
+{% block repeated_row %}
+{% spaceless %}
+    <div id="{{ id }}-container">
+    {{ block('field_rows') }}
+    </div>
+{% endspaceless %}
+{% endblock repeated_row %}
+
+{% block form_label %}
+{% spaceless %}
+{% endspaceless %}
+{% endblock form_label %}
