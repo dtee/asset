@@ -1,59 +1,95 @@
 <?php
+
+/*
+ * This file is part of the FOSUserBundle package.
+ *
+ * (c) FriendsOfSymfony <http://friendsofsymfony.github.com/>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Odl\AssetBundle\Form;
 
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Form\Form;
 
-use Symfony\Component\Form\FormFactory;
-
-abstract class FormHandler
-{
+abstract class FormHandler {
+    protected $errorsProvider;
     protected $formFactory;
     protected $request;
-    protected $ajaxErrorProvider;
-
-    protected $errors;
     protected $form;
 
-    public function __construt(FormFactory $formFactory, Request $request, AjaxErrorProvider $ajaxErrorProvider)
+	/**
+     * @return the $errorsProvider
+     */
+    public function getErrorsProvider()
+    {
+        return $this->errorsProvider;
+    }
+
+	/**
+     * @return the $formFactory
+     */
+    public function getFormFactory()
+    {
+        return $this->formFactory;
+    }
+
+	/**
+     * @return the $request
+     */
+    public function getRequest()
+    {
+        return $this->request;
+    }
+
+	/**
+     * @param field_type $errorsProvider
+     */
+    public function setErrorsProvider($errorsProvider)
+    {
+        $this->errorsProvider = $errorsProvider;
+    }
+
+	/**
+     * @param field_type $formFactory
+     */
+    public function setFormFactory($formFactory)
     {
         $this->formFactory = $formFactory;
+    }
+
+	/**
+     * @param field_type $request
+     */
+    public function setRequest($request)
+    {
         $this->request = $request;
-        $this->ajaxErrorProvider = $ajaxErrorProvider;
-
-        $this->createForm();
-        $this->process();
     }
 
-    abstract protected function createForm()
-    {
-
+    public function getErrors() {
+        return $this->errorsProvider->getErrors($this->getForm());
     }
 
-    abstract protected function onSuccess() {
+    public function process() {
+        $form = $this->getForm();
+        $request = $this->request;
 
-    }
+        $retVal = array();
+        if ($request->getMethod() == 'POST') {
+            $form->bindRequest($request);
 
-    public function process()
-    {
-        if ($this->request->getMethod() == 'POST')
-        {
-            $this->form->bindRequest($this->request);
-            if ($this->form->isValid()) {
-                return $this->onSuccess();
+            if ($form->isValid()) {
+                return $this->handleSuccess();
             }
             else {
-                $this->errors = $this->ajaxErrorProvider->getErrors($this->form);
+                return false;
             }
         }
+
+        return false;
     }
 
-    public function getErrors()
-    {
-        return $this->errors;
-    }
-
-    public function getForm()
-    {
-        return $this->form;
-    }
+    abstract protected function handleSuccess();
+    abstract public function getForm();
 }
