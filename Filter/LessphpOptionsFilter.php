@@ -11,6 +11,7 @@
 
 namespace Odl\AssetBundle\Filter;
 
+use Symfony\Component\HttpKernel\Kernel;
 use Assetic\Filter\FilterInterface;
 use Assetic\Asset\AssetInterface;
 
@@ -24,38 +25,66 @@ use Assetic\Asset\AssetInterface;
  * lessc is located.
  *
  */
-class LessphpOptionsFilter implements FilterInterface
+class LessphpOptionsFilter
+    implements FilterInterface
 {
-    private $baseDir;
     protected $options;
+    protected $lc;
+
+    protected $otherContent;
+    protected $lastModTime;
 
     /**
      * Constructor.
      *
      * @param string $baseDir The base web directory
      */
-    public function __construct($baseDir, array $options = array())
+    public function __construct(Kernel $kernel, array $options = array())
     {
-        $this->baseDir = $baseDir;
         $this->options = $options;
+        $this->lc = new \lessc();
+
+        $otherContent = '';
+        $lastModTime = 0;
+        if (isset($options['files'])) {
+            foreach ($options['files'] as $file) {
+                $filename = $kernel->locateResource('@' . $file);
+
+                if (!$filename || !file_exists($filename))
+                {
+                    if ($kernel->isDebug())
+                        throw new FileNotFoundException($filename);
+
+                    continue;
+                }
+
+                $lastModTime = max($lastModTime, filemtime($filename));
+                $otherContent .= file_get_contents($filename) . "\n";
+            }
+        }
+
+        $this->lastModTime = new \DateTime('@' . $lastModTime);
+        $this->otherContent = $otherContent;
     }
 
     public function filterLoad(AssetInterface $asset)
     {
-        $sourceUrl = $asset->getSourcePath();
-        if ($sourceUrl && false === strpos($sourceUrl, '://')) {
-            $baseDir = self::isAbsolutePath($sourceUrl) ? '' : $this->baseDir.'/';
-            $sourceUrl = $baseDir.$sourceUrl;
-        }
-
-        $lc = new \lessc();
         if (isset($this->options['importDir']))
         {
-       		$lc->importDir = $this->options['importDir'];
+            $lc->importDir = $this->options['importDir'];
         }
 
-        // the way lessc::parse is implemented, the content wins if both url and content are defined
-        $asset->setContent($lc->parse($asset->getContent()));
+        if ($content = $asset->getContent())
+        {
+            $content = $this->otherContent . "\n" . $content;
+            $content = $this->lc->parse($content);
+
+            $asset->setContent($content);
+        }
+    }
+
+    public function getLastModified() {
+        return $this->lastModTime;
     }
 
     public function filterDump(AssetInterface $asset)

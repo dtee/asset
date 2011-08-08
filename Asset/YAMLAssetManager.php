@@ -1,8 +1,8 @@
 <?php
 namespace Odl\AssetBundle\Asset;
 
-use Assetic\Asset\StringAsset;
 
+use Assetic\Asset\StringAsset;
 use Assetic\Filter\CssRewriteFilter;
 
 use Odl\AssetBundle\Filter\LessphpOptionsFilter;
@@ -25,14 +25,23 @@ class YAMLAssetManager
     protected $kernel;
     protected $debug = true;
     protected $router;
+    protected $lessFilter;
+    protected $assetYamlPath;
 
     public function __construct(Kernel $kernel, Router $router, $assetYamlPath)
     {
         $this->kernel = $kernel;
         $this->router = $router;
+        $this->assetYamlPath = $assetYamlPath;
+    }
 
-        $yamlConfig = $this->getConfig($assetYamlPath);
+    public function init() {
+        $yamlConfig = $this->getConfig($this->assetYamlPath);
         $this->loadFromConfig($yamlConfig);
+    }
+
+    public function setLessFilter($lessFilter) {
+        $this->lessFilter = $lessFilter;
     }
 
     protected function getConfig($filename)
@@ -82,7 +91,7 @@ class YAMLAssetManager
         $name = $package['name'];
         if (isset($this->sprites[$name]))
         {
-            throw new Exception("Duplicate sprite resources {$name}");
+            throw new \Exception("Duplicate sprite resources {$name}");
         }
 
         $path = $package['resources'];
@@ -101,6 +110,7 @@ class YAMLAssetManager
                 'name' => $imageAssetKey,
                 'time' => $spriteAsset->getLastModified()
         ));
+
         $spriteAsset->setTargetPath($spriteImageUrl);
         $spriteAsset->type = 'image';
         $this->set($imageAssetKey, $spriteAsset);
@@ -113,6 +123,7 @@ class YAMLAssetManager
                 'name' => $cssAssetKey,
                 'time' => $spriteAsset->getLastModified()
         ));
+
         $cssAsset->setTargetPath($url);
         $this->set($cssAssetKey, $cssAsset);
     }
@@ -221,18 +232,14 @@ class YAMLAssetManager
      */
     protected function loadPackage(array $package)
     {
-        $lessImportPaths = isset($package['less_import_paths']) ? $package['less_import_paths'] : array();
-        $lessImportPaths = $this->getAbsolutePaths($lessImportPaths, false);
-
-        $options = array(
-                'importDir' => $lessImportPaths
-        );
-        $lessFilter = new LessphpOptionsFilter(null, $options);
+        $lessFilter = $this->lessFilter;
         $cssRewriteFilter = new CssRewriteFilter();
 
         $files = $this->getAbsolutePaths($package['resources'], true);
         $assetCollection = new AssetCollection();
         $isCss = false;
+
+        $params = $this->router->getContext()->getParameters();
 
         foreach ( $files as $fileInfo )
         {
@@ -264,10 +271,11 @@ class YAMLAssetManager
                     $pathKey = md5($filename);
                 }
 
-                $url = $this->router->generate('_odl_asset', array(
-                        'name' => $pathKey,
-                        'time' => $asset->getLastModified()
-                ));
+                $params['name'] = $pathKey;
+                $params['time'] = max($lessFilter->getLastModified(), $asset->getLastModified());
+
+                $url = $this->router->generate('_odl_asset', $params);
+
                 $asset->setTargetPath($url);
                 $this->set($pathKey, $asset);
             }
@@ -288,14 +296,13 @@ class YAMLAssetManager
 
         $assetCollection->type = $package['type'];
 
-        $pathKey = $package['name'];
-        $url = $this->router->generate('_odl_asset', array(
-                'name' => $pathKey,
-                'time' => $assetCollection->getLastModified()
-        ));
+        $params['name'] = $package['name'];
+        $params['time'] = max($lessFilter->getLastModified(), $assetCollection->getLastModified());
+
+        $url = $this->router->generate('_odl_asset', $params);
 
         $assetCollection->setTargetPath($url);
-        $this->set($pathKey, $assetCollection);
+        $this->set($package['name'], $assetCollection);
     }
 
     /**

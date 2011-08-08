@@ -9,6 +9,11 @@
         <parameter key="asset.asset_manager.class">Odl\AssetBundle\Asset\YAMLAssetManager</parameter>
         <parameter key="asset.asset_manager.assets">%kernel.root_dir%/config/assets.yml</parameter>
         <parameter key="asset.form_errors">Odl\AssetBundle\Form\AjaxErrorProvider</parameter>
+        <parameter key="asset.filter.less.class">Odl\AssetBundle\Filter\LessphpOptionsFilter</parameter>
+        <parameter key="asset.routing_context.class">Odl\AssetBundle\Routing\AssetRequestContext</parameter>
+        
+        <parameter key="asset.filter.less.options" type="collection">
+        </parameter>
     </parameters>
     
     <services>
@@ -22,8 +27,20 @@
         
         <service id="asset.asset_manager" class="%asset.asset_manager.class%" public="true">
             <argument type="service" id="kernel" />
-            <argument type="service" id="router" />
+            <argument type="service" id="asset.router" />
             <argument>%asset.asset_manager.assets%</argument>
+            
+            <call method="setLessFilter">
+                <argument type="service" id="asset.filter.less" />
+            </call>
+            
+            <call method="init">
+            </call>
+        </service>
+        
+        <service id="asset.filter.less" class="%asset.filter.less.class%" public="true">
+            <argument type="service" id="kernel" />
+            <argument>%asset.filter.less.options%</argument>
         </service>
         
         <service id="form.errors" class="%asset.form_errors%" public="true">
@@ -40,6 +57,31 @@
             <call method="setRequest">
                  <argument type="service" id="request" />
             </call>
+        </service>
+
+        <service id="asset.router" class="%router.class%">
+            <argument type="service" id="service_container" />
+            <argument>%router.resource%</argument>
+            <argument type="collection">
+                <argument key="cache_dir">%kernel.cache_dir%</argument>
+                <argument key="debug">%kernel.debug%</argument>
+                <argument key="generator_class">%router.options.generator_class%</argument>
+                <argument key="generator_base_class">%router.options.generator_base_class%</argument>
+                <argument key="generator_dumper_class">%router.options.generator_dumper_class%</argument>
+                <argument key="generator_cache_class">%router.options.generator.cache_class%</argument>
+                <argument key="matcher_class">%router.options.matcher_class%</argument>
+                <argument key="matcher_base_class">%router.options.matcher_base_class%</argument>
+                <argument key="matcher_dumper_class">%router.options.matcher_dumper_class%</argument>
+                <argument key="matcher_cache_class">%router.options.matcher.cache_class%</argument>
+            </argument>
+            
+            <call method="setContext">
+                 <argument type="service" id="asset.routing_context" />
+            </call>
+        </service>
+        
+        <service id="asset.routing_context" class="%asset.routing_context.class%">
+            <argument type="service" id="service_container" />
         </service>
     </services>
 </container>

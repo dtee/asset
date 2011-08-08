@@ -94,7 +94,6 @@ class AssetController extends Controller
         if ($asset)
         {
             // if RouterAsset, try to get content via Controller
-
             $request = $this->get('request');
             $response = new Response();
             if (isset($typeHash[$asset->type]))
@@ -105,7 +104,7 @@ class AssetController extends Controller
             $kernel = $this->get('kernel');
             $isDebug = $kernel->isDebug();
 
-            if (null !== $lastModified = $asset->getLastModified())
+/*            if (null !== $lastModified = $asset->getLastModified())
             {
                 $date = new \DateTime();
                 $date->setTimestamp($lastModified);
@@ -121,7 +120,7 @@ class AssetController extends Controller
             if ($response->isNotModified($request))
             {
                 return $response;
-            }
+            }*/
 
             // last-modified
             if (!$isDebug)
@@ -156,20 +155,20 @@ class AssetController extends Controller
         $resourcePath = '@OdlAssetBundle/external/yuicompressor-2.4.6.jar';
         $jarPath = $kernel->locateResource($resourcePath);
 
-		if (!file_exists($javaPath))
-			return null;
+        if (!file_exists($javaPath))
+            return null;
 
-		if (isset($asset->type) && $asset->type == 'css')
-		{
-			$yuiFilter = new \Assetic\Filter\Yui\CssCompressorFilter($jarPath, $javaPath);
-		}
-		else
-		{
-			$yuiFilter = new \Assetic\Filter\Yui\JsCompressorFilter($jarPath, $javaPath);
-		}
+        if (isset($asset->type) && $asset->type == 'css')
+        {
+            $yuiFilter = new \Assetic\Filter\Yui\CssCompressorFilter($jarPath, $javaPath);
+        }
+        else
+        {
+            $yuiFilter = new \Assetic\Filter\Yui\JsCompressorFilter($jarPath, $javaPath);
+        }
 
-		return $yuiFilter;
-	}
+        return $yuiFilter;
+    }
 
     protected function cachifyAsset(AssetInterface $asset, $cache)
     {
