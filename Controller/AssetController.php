@@ -104,7 +104,7 @@ class AssetController extends Controller
             $kernel = $this->get('kernel');
             $isDebug = $kernel->isDebug();
 
-/*            if (null !== $lastModified = $asset->getLastModified())
+            if (null !== $lastModified = $asset->getLastModified())
             {
                 $date = new \DateTime();
                 $date->setTimestamp($lastModified);
@@ -120,7 +120,7 @@ class AssetController extends Controller
             if ($response->isNotModified($request))
             {
                 return $response;
-            }*/
+            }
 
             // last-modified
             if (!$isDebug)
