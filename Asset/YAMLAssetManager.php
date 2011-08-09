@@ -271,8 +271,9 @@ class YAMLAssetManager
                     $pathKey = md5($filename);
                 }
 
+                $assetTime = new \DateTime('@' . $asset->getLastModified());
                 $params['name'] = $pathKey;
-                $params['time'] = max($lessFilter->getLastModified(), $asset->getLastModified());
+                $params['time'] = max($lessFilter->getLastModified(), $assetTime)->getTimestamp();
 
                 $url = $this->router->generate('_odl_asset', $params);
 
@@ -297,7 +298,8 @@ class YAMLAssetManager
         $assetCollection->type = $package['type'];
 
         $params['name'] = $package['name'];
-        $params['time'] = max($lessFilter->getLastModified(), $assetCollection->getLastModified());
+        $assetTime = new \DateTime('@' . $assetCollection->getLastModified());
+        $params['time'] = max($lessFilter->getLastModified(), $assetTime)->getTimestamp();
 
         $url = $this->router->generate('_odl_asset', $params);
 
