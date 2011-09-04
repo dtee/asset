@@ -20,7 +20,7 @@ class AssetRequestContext
             $request->getHost(),
             $request->getScheme(),
             $request->isSecure() ? $this->httpPort : $request->getPort(),
-            $request->isSecure() ? $request->getPort() : $this->httpsPort
+            $request->isSecure() ? $request->getPort() : 81
         );
     }
 }
