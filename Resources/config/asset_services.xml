@@ -11,38 +11,9 @@
         <parameter key="asset.form_errors">Odl\AssetBundle\Form\AjaxErrorProvider</parameter>
         <parameter key="asset.filter.less.class">Odl\AssetBundle\Filter\LessphpOptionsFilter</parameter>
         <parameter key="asset.routing_context.class">Odl\AssetBundle\Routing\AssetRequestContext</parameter>
-        
-        <parameter key="asset.filter.less.options" type="collection">
-        </parameter>
     </parameters>
     
     <services>
-        <!-- Register asset extension so that user could use jumbo filter -->
-        <service id="twig.extension.asset" class="%asset.asset_twig_extension.class%" public="false" >
-            <tag name="twig.extension" />
-            <argument type="service" id="asset.asset_manager" />
-            <argument type="service" id="templating.helper.assets" strict="false" />
-            <argument>%kernel.debug%</argument>
-        </service>
-        
-        <service id="asset.asset_manager" class="%asset.asset_manager.class%" public="true">
-            <argument type="service" id="kernel" />
-            <argument type="service" id="asset.router" />
-            <argument>%asset.asset_manager.assets%</argument>
-            
-            <call method="setLessFilter">
-                <argument type="service" id="asset.filter.less" />
-            </call>
-            
-            <call method="init">
-            </call>
-        </service>
-        
-        <service id="asset.filter.less" class="%asset.filter.less.class%" public="true">
-            <argument type="service" id="kernel" />
-            <argument>%asset.filter.less.options%</argument>
-        </service>
-        
         <service id="form.errors" class="%asset.form_errors%" public="true">
             <argument type="service" id="translator" />
         </service>

@@ -78,7 +78,6 @@ class LessphpOptionsFilter
         {
             $content = $this->otherContent . "\n" . $content;
             $content = $this->lc->parse($content);
-
             $asset->setContent($content);
         }
     }
