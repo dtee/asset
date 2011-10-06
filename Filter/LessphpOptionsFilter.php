@@ -30,9 +30,9 @@ class LessphpOptionsFilter
 {
     protected $options;
     protected $lc;
-
     protected $otherContent;
     protected $lastModTime;
+    protected $kernel;
 
     /**
      * Constructor.
@@ -42,13 +42,18 @@ class LessphpOptionsFilter
     public function __construct(Kernel $kernel, array $options = array())
     {
         $this->options = $options;
+        $this->kernel = $kernel;
+    }
+
+    protected function initContent() {
         $this->lc = new \lessc();
 
         $otherContent = '';
         $lastModTime = 0;
+        $options = $this->options;
         if (isset($options['files'])) {
             foreach ($options['files'] as $file) {
-                $filename = $kernel->locateResource('@' . $file);
+                $filename = $this->kernel->locateResource('@' . $file);
 
                 if (!$filename || !file_exists($filename))
                 {
@@ -69,9 +74,13 @@ class LessphpOptionsFilter
 
     public function filterLoad(AssetInterface $asset)
     {
+        if (!$this->lc) {
+            $this->initContent();
+        }
+
         if (isset($this->options['importDir']))
         {
-            $lc->importDir = $this->options['importDir'];
+            $this->lc->importDir = $this->options['importDir'];
         }
 
         if ($content = $asset->getContent())
