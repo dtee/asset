@@ -25,6 +25,3 @@
 [submodule "vendor/js/jquery-form"]
 	path = vendor/js/jquery-form
 	url = git://github.com/malsup/form.git
-[submodule "vendor/js/jquery-ajaxform"]
-	path = vendor/js/jquery-ajaxform
-	url = git@github.com:dtee/jQuery-AjaxForm.git
